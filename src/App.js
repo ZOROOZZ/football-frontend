@@ -58,6 +58,63 @@ const FootballTracker = () => {
     setNewPlayers(newPlayers.filter((_, i) => i !== index));
   };
 
+  const deleteMatch = async (matchId) => {
+    if (!window.confirm('Are you sure you want to delete this match? This will update all player statistics.')) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_URL}/api/matches/${matchId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete match');
+      }
+
+      await loadData();
+      alert('Match deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting match:', error);
+      setError('Failed to delete match. Please try again.');
+      alert('Failed to delete match. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deletePlayer = async (playerId) => {
+    if (!window.confirm('Are you sure you want to delete this player? All their match records will also be deleted.')) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_URL}/api/players/${playerId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete player');
+      }
+
+      await loadData();
+      setSelectedPlayer(null);
+      alert('Player deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting player:', error);
+      setError('Failed to delete player. Please try again.');
+      alert('Failed to delete player. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const submitMatch = async () => {
     if (!matchDate) {
       alert('Please select a match date');
@@ -282,6 +339,30 @@ const FootballTracker = () => {
                     </button>
                   </div>
                 )}
+
+                {/* Recent Matches List */}
+                {matches.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Recent Matches</h2>
+                    <div className="space-y-3">
+                      {matches.slice(0, 10).map((match) => (
+                        <div key={match.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                          <div>
+                            <p className="font-semibold text-gray-800">Match on {match.match_date}</p>
+                            <p className="text-sm text-gray-600">ID: {match.id}</p>
+                          </div>
+                          <button
+                            onClick={() => deleteMatch(match.id)}
+                            disabled={loading}
+                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 disabled:bg-gray-400 text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -391,10 +472,23 @@ const FootballTracker = () => {
                   {players.map((player, index) => (
                     <div
                       key={index}
-                      onClick={() => setSelectedPlayer(player)}
-                      className="bg-white rounded-lg shadow-lg p-4 sm:p-6 cursor-pointer hover:shadow-xl transition"
+                      className="bg-white rounded-lg shadow-lg p-4 sm:p-6"
                     >
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">{player.name}</h3>
+                      <div className="flex justify-between items-start mb-3 sm:mb-4">
+                        <h3 
+                          onClick={() => setSelectedPlayer(player)}
+                          className="text-lg sm:text-xl font-bold text-gray-800 cursor-pointer hover:text-blue-600"
+                        >
+                          {player.name}
+                        </h3>
+                        <button
+                          onClick={() => deletePlayer(player.id)}
+                          disabled={loading}
+                          className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 disabled:bg-gray-400 text-xs"
+                        >
+                          Delete
+                        </button>
+                      </div>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm sm:text-base">
                           <span className="text-gray-600">Matches:</span>
@@ -419,6 +513,12 @@ const FootballTracker = () => {
                           </span>
                         </div>
                       </div>
+                      <button
+                        onClick={() => setSelectedPlayer(player)}
+                        className="w-full mt-3 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm"
+                      >
+                        View Performance
+                      </button>
                     </div>
                   ))}
                 </div>
