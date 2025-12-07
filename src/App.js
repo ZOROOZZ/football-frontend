@@ -123,14 +123,14 @@ const FootballTracker = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-3 sm:p-6">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
-            <Target className="text-blue-600" size={40} />
-            Football Match Tracker
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 flex items-center gap-2 sm:gap-3">
+            <Target className="text-blue-600" size={32} />
+            <span className="leading-tight">Football Match Tracker</span>
           </h1>
-          <p className="text-gray-600 mt-2">Track your team's performance and player statistics</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Track your team's performance and player statistics</p>
           {error && (
             <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {error}
@@ -139,33 +139,33 @@ const FootballTracker = () => {
         </div>
 
         {/* Navigation */}
-        <div className="bg-white rounded-lg shadow-lg mb-6">
-          <div className="flex border-b">
+        <div className="bg-white rounded-lg shadow-lg mb-4 sm:mb-6">
+          <div className="flex border-b overflow-x-auto">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-max px-4 sm:px-6 py-3 sm:py-4 font-semibold flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base ${
                 activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <TrendingUp size={20} />
+              <TrendingUp size={18} />
               Dashboard
             </button>
             <button
               onClick={() => setActiveTab('addMatch')}
-              className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-max px-4 sm:px-6 py-3 sm:py-4 font-semibold flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base ${
                 activeTab === 'addMatch' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <Plus size={20} />
+              <Plus size={18} />
               Add Match
             </button>
             <button
               onClick={() => setActiveTab('players')}
-              className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-max px-4 sm:px-6 py-3 sm:py-4 font-semibold flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base ${
                 activeTab === 'players' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <Users size={20} />
+              <Users size={18} />
               Players
             </button>
           </div>
@@ -182,45 +182,45 @@ const FootballTracker = () => {
             ) : (
               <>
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-white rounded-lg shadow p-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-500 text-sm">Total Matches</p>
-                        <p className="text-3xl font-bold text-blue-600">{matches.length}</p>
+                        <p className="text-gray-500 text-xs sm:text-sm">Total Matches</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-blue-600">{matches.length}</p>
                       </div>
-                      <Calendar className="text-blue-600" size={40} />
+                      <Calendar className="text-blue-600" size={32} />
                     </div>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-6">
+                  <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-500 text-sm">Total Players</p>
-                        <p className="text-3xl font-bold text-green-600">{players.length}</p>
+                        <p className="text-gray-500 text-xs sm:text-sm">Total Players</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-green-600">{players.length}</p>
                       </div>
-                      <Users className="text-green-600" size={40} />
+                      <Users className="text-green-600" size={32} />
                     </div>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-6">
+                  <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-500 text-sm">Total Goals</p>
-                        <p className="text-3xl font-bold text-red-600">
+                        <p className="text-gray-500 text-xs sm:text-sm">Total Goals</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-red-600">
                           {players.reduce((sum, p) => sum + p.total_goals, 0)}
                         </p>
                       </div>
-                      <Target className="text-red-600" size={40} />
+                      <Target className="text-red-600" size={32} />
                     </div>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-6">
+                  <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-500 text-sm">Total Saves</p>
-                        <p className="text-3xl font-bold text-purple-600">
+                        <p className="text-gray-500 text-xs sm:text-sm">Total Saves</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-purple-600">
                           {players.reduce((sum, p) => sum + p.total_saves, 0)}
                         </p>
                       </div>
-                      <TrendingUp className="text-purple-600" size={40} />
+                      <TrendingUp className="text-purple-600" size={32} />
                     </div>
                   </div>
                 </div>
@@ -229,24 +229,24 @@ const FootballTracker = () => {
                 {players.length > 0 && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Top Scorers */}
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                      <h2 className="text-xl font-bold text-gray-800 mb-4">Top Scorers</h2>
-                      <ResponsiveContainer width="100%" height={300}>
+                    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                      <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Top Scorers</h2>
+                      <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={getTopScorers()}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <YAxis tick={{ fontSize: 12 }} />
                           <Tooltip />
-                          <Legend />
+                          <Legend wrapperStyle={{ fontSize: '12px' }} />
                           <Bar dataKey="total_goals" fill="#3b82f6" name="Goals" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
 
                     {/* Goals Distribution */}
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                      <h2 className="text-xl font-bold text-gray-800 mb-4">Goals Distribution</h2>
-                      <ResponsiveContainer width="100%" height={300}>
+                    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                      <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Goals Distribution</h2>
+                      <ResponsiveContainer width="100%" height={250}>
                         <PieChart>
                           <Pie
                             data={getTopScorers()}
@@ -254,15 +254,15 @@ const FootballTracker = () => {
                             nameKey="name"
                             cx="50%"
                             cy="50%"
-                            outerRadius={100}
-                            label
+                            outerRadius={80}
+                            label={(entry) => entry.name}
+                            labelLine={false}
                           >
                             {getTopScorers().map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
                           <Tooltip />
-                          <Legend />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
@@ -289,84 +289,84 @@ const FootballTracker = () => {
 
         {/* Add Match Tab */}
         {activeTab === 'addMatch' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Add New Match</h2>
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Add New Match</h2>
             
-            <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">Match Date</label>
+            <div className="mb-4 sm:mb-6">
+              <label className="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Match Date</label>
               <input
                 type="date"
                 value={matchDate}
                 onChange={(e) => setMatchDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
             </div>
 
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-gray-800">Players</h3>
+            <div className="mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Players</h3>
                 <button
                   onClick={addPlayerField}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+                  className="bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm sm:text-base w-full sm:w-auto justify-center"
                 >
-                  <Plus size={20} />
+                  <Plus size={18} />
                   Add Player
                 </button>
               </div>
 
               <div className="space-y-4">
                 {newPlayers.map((player, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="md:col-span-2">
-                      <label className="block text-gray-700 font-medium mb-1">Player Name</label>
+                  <div key={index} className="grid grid-cols-1 gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-1 text-sm">Player Name</label>
                       <input
                         type="text"
                         value={player.name}
                         onChange={(e) => updatePlayerField(index, 'name', e.target.value)}
                         placeholder="Enter player name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       />
                     </div>
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-1">Goals</label>
-                      <input
-                        type="number"
-                        value={player.goals}
-                        onChange={(e) => updatePlayerField(index, 'goals', e.target.value)}
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-1">Assists</label>
-                      <input
-                        type="number"
-                        value={player.assists}
-                        onChange={(e) => updatePlayerField(index, 'assists', e.target.value)}
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <label className="block text-gray-700 font-medium mb-1">Saves</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-1 text-xs sm:text-sm">Goals</label>
+                        <input
+                          type="number"
+                          value={player.goals}
+                          onChange={(e) => updatePlayerField(index, 'goals', e.target.value)}
+                          min="0"
+                          className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-1 text-xs sm:text-sm">Assists</label>
+                        <input
+                          type="number"
+                          value={player.assists}
+                          onChange={(e) => updatePlayerField(index, 'assists', e.target.value)}
+                          min="0"
+                          className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-1 text-xs sm:text-sm">Saves</label>
                         <input
                           type="number"
                           value={player.saves}
                           onChange={(e) => updatePlayerField(index, 'saves', e.target.value)}
                           min="0"
-                          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         />
                       </div>
-                      {newPlayers.length > 1 && (
-                        <button
-                          onClick={() => removePlayerField(index)}
-                          className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                        >
-                          ×
-                        </button>
-                      )}
                     </div>
+                    {newPlayers.length > 1 && (
+                      <button
+                        onClick={() => removePlayerField(index)}
+                        className="w-full px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                      >
+                        Remove Player
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -375,7 +375,7 @@ const FootballTracker = () => {
             <button
               onClick={submitMatch}
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               {loading ? 'Saving...' : 'Save Match'}
             </button>
@@ -384,35 +384,35 @@ const FootballTracker = () => {
 
         {/* Players Tab */}
         {activeTab === 'players' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {players.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {players.map((player, index) => (
                     <div
                       key={index}
                       onClick={() => setSelectedPlayer(player)}
-                      className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition"
+                      className="bg-white rounded-lg shadow-lg p-4 sm:p-6 cursor-pointer hover:shadow-xl transition"
                     >
-                      <h3 className="text-xl font-bold text-gray-800 mb-4">{player.name}</h3>
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">{player.name}</h3>
                       <div className="space-y-2">
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm sm:text-base">
                           <span className="text-gray-600">Matches:</span>
                           <span className="font-semibold">{player.matches_played}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm sm:text-base">
                           <span className="text-gray-600">Goals:</span>
                           <span className="font-semibold text-blue-600">{player.total_goals}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm sm:text-base">
                           <span className="text-gray-600">Assists:</span>
                           <span className="font-semibold text-green-600">{player.total_assists}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm sm:text-base">
                           <span className="text-gray-600">Saves:</span>
                           <span className="font-semibold text-purple-600">{player.total_saves}</span>
                         </div>
-                        <div className="flex justify-between pt-2 border-t">
+                        <div className="flex justify-between pt-2 border-t text-sm sm:text-base">
                           <span className="text-gray-600">Avg Goals/Match:</span>
                           <span className="font-semibold">
                             {(player.total_goals / player.matches_played).toFixed(2)}
@@ -424,25 +424,25 @@ const FootballTracker = () => {
                 </div>
 
                 {selectedPlayer && (
-                  <div className="bg-white rounded-lg shadow-lg p-6">
-                    <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-2xl font-bold text-gray-800">
+                  <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                    <div className="flex justify-between items-center mb-4 sm:mb-6">
+                      <h2 className="text-lg sm:text-2xl font-bold text-gray-800">
                         {selectedPlayer.name}'s Performance
                       </h2>
                       <button
                         onClick={() => setSelectedPlayer(null)}
-                        className="text-gray-500 hover:text-gray-700"
+                        className="text-gray-500 hover:text-gray-700 text-sm sm:text-base px-3 py-1 bg-gray-100 rounded"
                       >
                         Close
                       </button>
                     </div>
-                    <ResponsiveContainer width="100%" height={400}>
+                    <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={getPlayerPerformance(selectedPlayer)}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <Tooltip />
-                        <Legend />
+                        <Legend wrapperStyle={{ fontSize: '12px' }} />
                         <Line type="monotone" dataKey="goals" stroke="#3b82f6" strokeWidth={2} name="Goals" />
                         <Line type="monotone" dataKey="assists" stroke="#10b981" strokeWidth={2} name="Assists" />
                         <Line type="monotone" dataKey="saves" stroke="#8b5cf6" strokeWidth={2} name="Saves" />
@@ -452,10 +452,10 @@ const FootballTracker = () => {
                 )}
               </>
             ) : (
-              <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-                <Users className="mx-auto text-gray-300 mb-4" size={64} />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No players yet</h3>
-                <p className="text-gray-500">Add your first match to see player statistics</p>
+              <div className="bg-white rounded-lg shadow-lg p-8 sm:p-12 text-center">
+                <Users className="mx-auto text-gray-300 mb-4" size={48} />
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2">No players yet</h3>
+                <p className="text-sm sm:text-base text-gray-500">Add your first match to see player statistics</p>
               </div>
             )}
           </div>
