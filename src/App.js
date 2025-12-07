@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Plus, TrendingUp, Users, Target, Calendar } from 'lucide-react';
 
+const API_URL = 'https://football-tracker-api.mehul-112.workers.dev';
+
 const FootballTracker = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [matches, setMatches] = useState([]);
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Form states
   const [matchDate, setMatchDate] = useState('');
@@ -17,28 +21,26 @@ const FootballTracker = () => {
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const storedMatches = await window.storage.get('matches');
-      const storedPlayers = await window.storage.get('players');
+      const matchesRes = await fetch(`${API_URL}/api/matches`);
+      const playersRes = await fetch(`${API_URL}/api/players`);
       
-      if (storedMatches) {
-        setMatches(JSON.parse(storedMatches.value));
+      if (!matchesRes.ok || !playersRes.ok) {
+        throw new Error('Failed to load data');
       }
-      if (storedPlayers) {
-        setPlayers(JSON.parse(storedPlayers.value));
-      }
+      
+      const matchesData = await matchesRes.json();
+      const playersData = await playersRes.json();
+      
+      setMatches(matchesData);
+      setPlayers(playersData);
     } catch (error) {
-      console.log('No existing data found, starting fresh');
-    }
-  };
-
-  const saveData = async (newMatches, newPlayers) => {
-    try {
-      await window.storage.set('matches', JSON.stringify(newMatches));
-      await window.storage.set('players', JSON.stringify(newPlayers));
-    } catch (error) {
-      console.error('Error saving data:', error);
-      alert('Failed to save data');
+      console.error('Error loading data:', error);
+      setError('Failed to load data. Please refresh the page.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,59 +70,44 @@ const FootballTracker = () => {
       return;
     }
 
-    const newMatch = {
-      id: Date.now(),
-      date: matchDate,
-      players: validPlayers
-    };
-
-    const updatedMatches = [...matches, newMatch];
+    setLoading(true);
+    setError(null);
     
-    // Update player statistics
-    const updatedPlayers = [...players];
-    validPlayers.forEach(matchPlayer => {
-      const existingPlayer = updatedPlayers.find(p => p.name === matchPlayer.name);
-      if (existingPlayer) {
-        existingPlayer.totalGoals += matchPlayer.goals;
-        existingPlayer.totalSaves += matchPlayer.saves;
-        existingPlayer.totalAssists += matchPlayer.assists;
-        existingPlayer.matchesPlayed += 1;
-        existingPlayer.history.push({
+    try {
+      const response = await fetch(`${API_URL}/api/matches`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           date: matchDate,
-          goals: matchPlayer.goals,
-          saves: matchPlayer.saves,
-          assists: matchPlayer.assists
-        });
-      } else {
-        updatedPlayers.push({
-          name: matchPlayer.name,
-          totalGoals: matchPlayer.goals,
-          totalSaves: matchPlayer.saves,
-          totalAssists: matchPlayer.assists,
-          matchesPlayed: 1,
-          history: [{
-            date: matchDate,
-            goals: matchPlayer.goals,
-            saves: matchPlayer.saves,
-            assists: matchPlayer.assists
-          }]
-        });
+          players: validPlayers
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save match');
       }
-    });
 
-    setMatches(updatedMatches);
-    setPlayers(updatedPlayers);
-    await saveData(updatedMatches, updatedPlayers);
+      // Reload data from server
+      await loadData();
 
-    // Reset form
-    setMatchDate('');
-    setNewPlayers([{ name: '', goals: 0, saves: 0, assists: 0 }]);
-    setActiveTab('dashboard');
-    alert('Match added successfully!');
+      // Reset form
+      setMatchDate('');
+      setNewPlayers([{ name: '', goals: 0, saves: 0, assists: 0 }]);
+      setActiveTab('dashboard');
+      alert('Match added successfully!');
+    } catch (error) {
+      console.error('Error saving match:', error);
+      setError('Failed to save match. Please try again.');
+      alert('Failed to save match. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getTopScorers = () => {
-    return [...players].sort((a, b) => b.totalGoals - a.totalGoals).slice(0, 5);
+    return [...players].sort((a, b) => b.total_goals - a.total_goals).slice(0, 5);
   };
 
   const getPlayerPerformance = (player) => {
@@ -144,6 +131,11 @@ const FootballTracker = () => {
             Football Match Tracker
           </h1>
           <p className="text-gray-600 mt-2">Track your team's performance and player statistics</p>
+          {error && (
+            <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Navigation */}
@@ -182,106 +174,115 @@ const FootballTracker = () => {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-500 text-sm">Total Matches</p>
-                    <p className="text-3xl font-bold text-blue-600">{matches.length}</p>
-                  </div>
-                  <Calendar className="text-blue-600" size={40} />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-500 text-sm">Total Players</p>
-                    <p className="text-3xl font-bold text-green-600">{players.length}</p>
-                  </div>
-                  <Users className="text-green-600" size={40} />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-500 text-sm">Total Goals</p>
-                    <p className="text-3xl font-bold text-red-600">
-                      {players.reduce((sum, p) => sum + p.totalGoals, 0)}
-                    </p>
-                  </div>
-                  <Target className="text-red-600" size={40} />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-500 text-sm">Total Saves</p>
-                    <p className="text-3xl font-bold text-purple-600">
-                      {players.reduce((sum, p) => sum + p.totalSaves, 0)}
-                    </p>
-                  </div>
-                  <TrendingUp className="text-purple-600" size={40} />
-                </div>
-              </div>
-            </div>
-
-            {/* Charts */}
-            {players.length > 0 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Top Scorers */}
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">Top Scorers</h2>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={getTopScorers()}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="totalGoals" fill="#3b82f6" name="Goals" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Goals Distribution */}
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">Goals Distribution</h2>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={getTopScorers()}
-                        dataKey="totalGoals"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        label
-                      >
-                        {getTopScorers().map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-
-            {matches.length === 0 && (
+            {loading ? (
               <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-                <Target className="mx-auto text-gray-300 mb-4" size={64} />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No matches yet</h3>
-                <p className="text-gray-500 mb-4">Start by adding your first match!</p>
-                <button
-                  onClick={() => setActiveTab('addMatch')}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  Add Match
-                </button>
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="text-gray-600 mt-4">Loading data...</p>
               </div>
+            ) : (
+              <>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-500 text-sm">Total Matches</p>
+                        <p className="text-3xl font-bold text-blue-600">{matches.length}</p>
+                      </div>
+                      <Calendar className="text-blue-600" size={40} />
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-500 text-sm">Total Players</p>
+                        <p className="text-3xl font-bold text-green-600">{players.length}</p>
+                      </div>
+                      <Users className="text-green-600" size={40} />
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-500 text-sm">Total Goals</p>
+                        <p className="text-3xl font-bold text-red-600">
+                          {players.reduce((sum, p) => sum + p.total_goals, 0)}
+                        </p>
+                      </div>
+                      <Target className="text-red-600" size={40} />
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-500 text-sm">Total Saves</p>
+                        <p className="text-3xl font-bold text-purple-600">
+                          {players.reduce((sum, p) => sum + p.total_saves, 0)}
+                        </p>
+                      </div>
+                      <TrendingUp className="text-purple-600" size={40} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Charts */}
+                {players.length > 0 && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Top Scorers */}
+                    <div className="bg-white rounded-lg shadow-lg p-6">
+                      <h2 className="text-xl font-bold text-gray-800 mb-4">Top Scorers</h2>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={getTopScorers()}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="total_goals" fill="#3b82f6" name="Goals" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Goals Distribution */}
+                    <div className="bg-white rounded-lg shadow-lg p-6">
+                      <h2 className="text-xl font-bold text-gray-800 mb-4">Goals Distribution</h2>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={getTopScorers()}
+                            dataKey="total_goals"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            label
+                          >
+                            {getTopScorers().map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {matches.length === 0 && !loading && (
+                  <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+                    <Target className="mx-auto text-gray-300 mb-4" size={64} />
+                    <h3 className="text-xl font-semibold text-gray-600 mb-2">No matches yet</h3>
+                    <p className="text-gray-500 mb-4">Start by adding your first match!</p>
+                    <button
+                      onClick={() => setActiveTab('addMatch')}
+                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      Add Match
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -373,9 +374,10 @@ const FootballTracker = () => {
 
             <button
               onClick={submitMatch}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              Save Match
+              {loading ? 'Saving...' : 'Save Match'}
             </button>
           </div>
         )}
@@ -396,24 +398,24 @@ const FootballTracker = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Matches:</span>
-                          <span className="font-semibold">{player.matchesPlayed}</span>
+                          <span className="font-semibold">{player.matches_played}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Goals:</span>
-                          <span className="font-semibold text-blue-600">{player.totalGoals}</span>
+                          <span className="font-semibold text-blue-600">{player.total_goals}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Assists:</span>
-                          <span className="font-semibold text-green-600">{player.totalAssists}</span>
+                          <span className="font-semibold text-green-600">{player.total_assists}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Saves:</span>
-                          <span className="font-semibold text-purple-600">{player.totalSaves}</span>
+                          <span className="font-semibold text-purple-600">{player.total_saves}</span>
                         </div>
                         <div className="flex justify-between pt-2 border-t">
                           <span className="text-gray-600">Avg Goals/Match:</span>
                           <span className="font-semibold">
-                            {(player.totalGoals / player.matchesPlayed).toFixed(2)}
+                            {(player.total_goals / player.matches_played).toFixed(2)}
                           </span>
                         </div>
                       </div>
