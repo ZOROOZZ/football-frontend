@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Users, Plus, Key, Trash2 } from 'lucide-react';
 
 const UserManagement = ({ token, currentUser }) => {
@@ -14,11 +14,7 @@ const UserManagement = ({ token, currentUser }) => {
   const [newRole, setNewRole] = useState('user');
   const [resetPassword, setResetPassword] = useState('');
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('https://football-tracker-api.mehul-112.workers.dev/api/users', {
@@ -34,7 +30,11 @@ const UserManagement = ({ token, currentUser }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
