@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, Plus, Users } from 'lucide-react';
 import Login from './components/Login';
 import Header from './components/Header';
@@ -17,32 +17,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setCurrentUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated && token) {
-      loadData();
-    }
-  }, [isAuthenticated, token]);
-
-  const handleLogin = async (username, password) => {
-    const data = await api.login(username, password);
-    setToken(data.token);
-    setCurrentUser(data.user);
-    setIsAuthenticated(true);
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-  };
-
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     setToken(null);
     setCurrentUser(null);
     setIsAuthenticated(false);
@@ -50,9 +25,11 @@ const App = () => {
     localStorage.removeItem('user');
     setMatches([]);
     setPlayers([]);
-  };
+  }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    if (!token) return;
+    
     setLoading(true);
     setError(null);
     try {
@@ -72,6 +49,31 @@ const App = () => {
     } finally {
       setLoading(false);
     }
+  }, [token, handleLogout]);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setCurrentUser(JSON.parse(savedUser));
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      loadData();
+    }
+  }, [isAuthenticated, token, loadData]);
+
+  const handleLogin = async (username, password) => {
+    const data = await api.login(username, password);
+    setToken(data.token);
+    setCurrentUser(data.user);
+    setIsAuthenticated(true);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
   };
 
   const handleSubmitMatch = async (matchData) => {
