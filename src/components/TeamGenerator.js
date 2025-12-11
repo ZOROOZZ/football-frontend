@@ -1,19 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Shuffle, Save } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Users, Shuffle } from 'lucide-react';
 
 const TeamGenerator = ({ token }) => {
   const [players, setPlayers] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [team1, setTeam1] = useState([]);
   const [team2, setTeam2] = useState([]);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadPlayers();
-  }, []);
-
-  const loadPlayers = async () => {
-    setLoading(true);
+  const loadPlayers = useCallback(async () => {
     try {
       const response = await fetch('https://football-tracker-api.mehul-112.workers.dev/api/players', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -24,10 +18,12 @@ const TeamGenerator = ({ token }) => {
       }
     } catch (error) {
       console.error('Error loading players:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    loadPlayers();
+  }, [loadPlayers]);
 
   const togglePlayerSelection = (player) => {
     if (selectedPlayers.find(p => p.id === player.id)) {
@@ -50,7 +46,6 @@ const TeamGenerator = ({ token }) => {
       return;
     }
 
-    // Sort players by skill score
     const sortedPlayers = [...selectedPlayers].sort((a, b) => 
       calculatePlayerScore(b) - calculatePlayerScore(a)
     );
@@ -60,7 +55,6 @@ const TeamGenerator = ({ token }) => {
     let t1Score = 0;
     let t2Score = 0;
 
-    // Distribute players to balance teams
     sortedPlayers.forEach(player => {
       const playerScore = calculatePlayerScore(player);
       if (t1Score <= t2Score) {
@@ -82,7 +76,6 @@ const TeamGenerator = ({ token }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
         <div className="flex justify-between items-center">
           <div>
@@ -105,7 +98,6 @@ const TeamGenerator = ({ token }) => {
         </div>
       </div>
 
-      {/* Player Selection */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
           Select Players ({selectedPlayers.length} selected)
@@ -130,10 +122,8 @@ const TeamGenerator = ({ token }) => {
         </div>
       </div>
 
-      {/* Generated Teams */}
       {team1.length > 0 && team2.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Team 1 */}
           <div className="bg-blue-50 dark:bg-blue-900 rounded-lg shadow-lg p-4 sm:p-6">
             <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-4">
               Team 1 (Score: {getTeamTotalScore(team1)})
@@ -152,7 +142,6 @@ const TeamGenerator = ({ token }) => {
             </div>
           </div>
 
-          {/* Team 2 */}
           <div className="bg-green-50 dark:bg-green-900 rounded-lg shadow-lg p-4 sm:p-6">
             <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-4">
               Team 2 (Score: {getTeamTotalScore(team2)})
