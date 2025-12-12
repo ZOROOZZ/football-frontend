@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, TrendingUp, Award, Target } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -6,11 +6,7 @@ const GoalkeeperStats = ({ token }) => {
   const [goalkeepers, setGoalkeepers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadGoalkeepers();
-  }, []);
-
-  const loadGoalkeepers = async () => {
+  const loadGoalkeepers = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('https://football-tracker-api.mehul-112.workers.dev/api/players', {
@@ -19,7 +15,6 @@ const GoalkeeperStats = ({ token }) => {
       
       if (response.ok) {
         const data = await response.json();
-        // Filter only goalkeepers
         const gks = data.filter(p => p.position === 'Goalkeeper');
         setGoalkeepers(gks);
       }
@@ -28,7 +23,11 @@ const GoalkeeperStats = ({ token }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    loadGoalkeepers();
+  }, [loadGoalkeepers]);
 
   const calculateSavePercentage = (gk) => {
     if (gk.total_shots_faced === 0) return 0;
@@ -66,7 +65,6 @@ const GoalkeeperStats = ({ token }) => {
 
   return (
     <div className="space-y-6">
-      {/* Stats Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
           <div className="flex items-center justify-between">
@@ -82,7 +80,7 @@ const GoalkeeperStats = ({ token }) => {
             <div>
               <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Clean Sheets</p>
               <p className="text-2xl sm:text-3xl font-bold text-green-600">
-                {goalkeepers.reduce((sum, gk) => sum + gk.clean_sheets, 0)}
+                {goalkeepers.reduce((sum, gk) => sum + (gk.clean_sheets || 0), 0)}
               </p>
             </div>
             <Award className="text-green-600" size={32} />
@@ -93,7 +91,7 @@ const GoalkeeperStats = ({ token }) => {
             <div>
               <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Total Saves</p>
               <p className="text-2xl sm:text-3xl font-bold text-purple-600">
-                {goalkeepers.reduce((sum, gk) => sum + gk.total_saves, 0)}
+                {goalkeepers.reduce((sum, gk) => sum + (gk.total_saves || 0), 0)}
               </p>
             </div>
             <Target className="text-purple-600" size={32} />
@@ -104,7 +102,7 @@ const GoalkeeperStats = ({ token }) => {
             <div>
               <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Penalty Saves</p>
               <p className="text-2xl sm:text-3xl font-bold text-red-600">
-                {goalkeepers.reduce((sum, gk) => sum + gk.total_penalties_saved, 0)}
+                {goalkeepers.reduce((sum, gk) => sum + (gk.total_penalties_saved || 0), 0)}
               </p>
             </div>
             <TrendingUp className="text-red-600" size={32} />
@@ -112,7 +110,6 @@ const GoalkeeperStats = ({ token }) => {
         </div>
       </div>
 
-      {/* Clean Sheets Leaderboard */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Clean Sheets Leaderboard</h2>
         <ResponsiveContainer width="100%" height={300}>
@@ -127,7 +124,6 @@ const GoalkeeperStats = ({ token }) => {
         </ResponsiveContainer>
       </div>
 
-      {/* Goalkeeper Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {goalkeepers.map(gk => (
           <div key={gk.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
@@ -146,15 +142,15 @@ const GoalkeeperStats = ({ token }) => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Matches:</span>
-                <span className="font-semibold text-gray-800 dark:text-white">{gk.matches_played}</span>
+                <span className="font-semibold text-gray-800 dark:text-white">{gk.matches_played || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Clean Sheets:</span>
-                <span className="font-semibold text-green-600 dark:text-green-400">{gk.clean_sheets}</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">{gk.clean_sheets || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Total Saves:</span>
-                <span className="font-semibold text-purple-600 dark:text-purple-400">{gk.total_saves}</span>
+                <span className="font-semibold text-purple-600 dark:text-purple-400">{gk.total_saves || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Save %:</span>
@@ -167,14 +163,14 @@ const GoalkeeperStats = ({ token }) => {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Penalty Saves:</span>
                 <span className="font-semibold text-orange-600 dark:text-orange-400">
-                  {gk.total_penalties_saved}/{gk.total_penalties_faced}
+                  {gk.total_penalties_saved || 0}/{gk.total_penalties_faced || 0}
                 </span>
               </div>
               <div className="flex justify-between text-sm pt-2 border-t dark:border-gray-700">
                 <span className="text-gray-600 dark:text-gray-400">Cards:</span>
                 <div className="flex gap-2">
-                  <span className="text-yellow-600 dark:text-yellow-400">🟨 {gk.total_yellow_cards}</span>
-                  <span className="text-red-600 dark:text-red-400">🟥 {gk.total_red_cards}</span>
+                  <span className="text-yellow-600 dark:text-yellow-400">🟨 {gk.total_yellow_cards || 0}</span>
+                  <span className="text-red-600 dark:text-red-400">🟥 {gk.total_red_cards || 0}</span>
                 </div>
               </div>
             </div>
