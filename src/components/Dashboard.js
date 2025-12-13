@@ -9,6 +9,27 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
 
   const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
 
+  // Custom label for pie chart to avoid overlapping
+  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 25;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#374151"
+        textAnchor={x > cx ? 'start' : 'end'}
+        dominantBaseline="central"
+        className="text-sm font-medium"
+      >
+        {`${name}: ${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
@@ -67,17 +88,22 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
       {/* Charts */}
       {players.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Bar Chart */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4">Top Scorers</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={getTopScorers()} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+              <BarChart 
+                data={getTopScorers()} 
+                margin={{ top: 20, right: 30, left: 10, bottom: 60 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                  angle={-45}
+                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                  angle={-35}
                   textAnchor="end"
-                  height={80}
+                  height={60}
+                  interval={0}
                 />
                 <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
                 <Tooltip 
@@ -88,12 +114,13 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
                     fontSize: '12px'
                   }}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 <Bar dataKey="total_goals" fill="#3b82f6" name="Goals" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
+          {/* Pie Chart */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4">Goals Distribution</h2>
             <ResponsiveContainer width="100%" height={300}>
@@ -104,9 +131,12 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  labelLine={true}
+                  outerRadius={80}
+                  label={renderCustomLabel}
+                  labelLine={{
+                    stroke: '#9ca3af',
+                    strokeWidth: 1
+                  }}
                 >
                   {getTopScorers().map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
