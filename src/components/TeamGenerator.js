@@ -58,31 +58,23 @@ const TeamGenerator = ({ token }) => {
 
     const t1 = [];
     const t2 = [];
-    let t1Score = 0;
-    let t2Score = 0;
 
     // Distribute players using snake draft (1-2-2-1-1-2-2-1...)
     sortedPlayers.forEach((player, index) => {
-      const playerScore = calculatePlayerScore(player);
-      
       // Alternate distribution, prioritizing balance
       if (index % 4 === 0 || index % 4 === 3) {
         // Add to team 1
         if (t1.length < team1Size) {
           t1.push(player);
-          t1Score += playerScore;
         } else {
           t2.push(player);
-          t2Score += playerScore;
         }
       } else {
         // Add to team 2
         if (t2.length < team2Size) {
           t2.push(player);
-          t2Score += playerScore;
         } else {
           t1.push(player);
-          t1Score += playerScore;
         }
       }
     });
