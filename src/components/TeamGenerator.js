@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Shuffle } from 'lucide-react';
+import { Users, Shuffle, Search } from 'lucide-react';
 
 const TeamGenerator = ({ token }) => {
   const [players, setPlayers] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [team1, setTeam1] = useState([]);
   const [team2, setTeam2] = useState([]);
+  const [filterPosition, setFilterPosition] = useState('All');
+
+  const positions = ['All', 'GK', 'DEF', 'MID', 'FWD'];
 
   const loadPlayers = useCallback(async () => {
     try {
@@ -46,31 +49,25 @@ const TeamGenerator = ({ token }) => {
       return;
     }
 
-    // Sort players by score (highest to lowest)
     const sortedPlayers = [...selectedPlayers].sort((a, b) => 
       calculatePlayerScore(b) - calculatePlayerScore(a)
     );
 
-    // Calculate team sizes
     const totalPlayers = sortedPlayers.length;
-    const team1Size = Math.ceil(totalPlayers / 2);  // Larger or equal team
-    const team2Size = Math.floor(totalPlayers / 2); // Smaller or equal team
+    const team1Size = Math.ceil(totalPlayers / 2);
+    const team2Size = Math.floor(totalPlayers / 2);
 
     const t1 = [];
     const t2 = [];
 
-    // Distribute players using snake draft (1-2-2-1-1-2-2-1...)
     sortedPlayers.forEach((player, index) => {
-      // Alternate distribution, prioritizing balance
       if (index % 4 === 0 || index % 4 === 3) {
-        // Add to team 1
         if (t1.length < team1Size) {
           t1.push(player);
         } else {
           t2.push(player);
         }
       } else {
-        // Add to team 2
         if (t2.length < team2Size) {
           t2.push(player);
         } else {
@@ -84,109 +81,236 @@ const TeamGenerator = ({ token }) => {
   };
 
   const getTeamTotalScore = (team) => {
-    return team.reduce((sum, player) => sum + calculatePlayerScore(player), 0).toFixed(2);
+    return team.reduce((sum, player) => sum + calculatePlayerScore(player), 0).toFixed(1);
   };
 
+  const getPositionShorthand = (position) => {
+    const map = {
+      'Goalkeeper': 'GK',
+      'Defender': 'DEF',
+      'Midfielder': 'MID',
+      'Forward': 'FWD'
+    };
+    return map[position] || position;
+  };
+
+  const filteredPlayers = players.filter(player => {
+    if (filterPosition === 'All') return true;
+    return getPositionShorthand(player.position) === filterPosition;
+  });
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto animate-fadeIn space-y-6">
+      {/* Header */}
+      <div className="bg-dark-card rounded-2xl p-6 shadow-card">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-              <Users size={28} />
-              Team Generator
+            <h2 className="text-white text-2xl font-bold flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-blue to-blue-600 rounded-xl flex items-center justify-center">
+                <Users size={20} className="text-white" />
+              </div>
+              Team Builder
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Select players and create balanced teams
-            </p>
+            <p className="text-text-secondary mt-1">Select players and create balanced teams</p>
           </div>
           <button
             onClick={generateBalancedTeams}
             disabled={selectedPlayers.length < 2}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 w-full sm:w-auto justify-center"
+            className="bg-primary-blue hover:bg-primary-blue-dark text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-primary-blue/25"
           >
             <Shuffle size={18} />
-            Generate Teams
+            Auto-Balance
           </button>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
-          Select Players ({selectedPlayers.length} selected)
-        </h3>
+      {/* Team Preview Cards */}
+      {team1.length > 0 && team2.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Team A */}
+          <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-2 border-blue-500/20 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary-blue rounded-xl flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">A</span>
+                </div>
+                <div>
+                  <h3 className="text-white text-xl font-bold">Team A</h3>
+                  <p className="text-text-secondary text-sm">{team1.length}/{selectedPlayers.length} Players</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-text-secondary text-xs">Rating</p>
+                <p className="text-primary-blue text-2xl font-bold">{getTeamTotalScore(team1)}</p>
+              </div>
+            </div>
+
+            {/* Power Bar */}
+            <div className="bg-dark-bg rounded-full h-3 overflow-hidden mb-4">
+              <div 
+                className="bg-gradient-to-r from-primary-blue to-blue-400 h-full transition-all duration-500"
+                style={{ width: `${(parseFloat(getTeamTotalScore(team1)) / (parseFloat(getTeamTotalScore(team1)) + parseFloat(getTeamTotalScore(team2)))) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Team B */}
+          <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-2 border-orange-500/20 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-warning-orange rounded-xl flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">B</span>
+                </div>
+                <div>
+                  <h3 className="text-white text-xl font-bold">Team B</h3>
+                  <p className="text-text-secondary text-sm">{team2.length}/{selectedPlayers.length} Players</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-text-secondary text-xs">Rating</p>
+                <p className="text-warning-orange text-2xl font-bold">{getTeamTotalScore(team2)}</p>
+              </div>
+            </div>
+
+            {/* Power Bar */}
+            <div className="bg-dark-bg rounded-full h-3 overflow-hidden mb-4">
+              <div 
+                className="bg-gradient-to-r from-warning-orange to-orange-400 h-full transition-all duration-500"
+                style={{ width: `${(parseFloat(getTeamTotalScore(team2)) / (parseFloat(getTeamTotalScore(team1)) + parseFloat(getTeamTotalScore(team2)))) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Player Selection */}
+      <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white text-lg font-bold">
+            Available Pool ({selectedPlayers.length} selected)
+          </h3>
+        </div>
+
+        {/* Search & Filters */}
+        <div className="space-y-4 mb-6">
+          {/* Search disabled for now - can enable if needed */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            {positions.map(position => (
+              <button
+                key={position}
+                onClick={() => setFilterPosition(position)}
+                className={`px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
+                  filterPosition === position
+                    ? 'bg-primary-blue text-white shadow-lg shadow-primary-blue/25'
+                    : 'bg-dark-bg text-text-secondary hover:text-white hover:bg-dark-card-hover'
+                }`}
+              >
+                {position}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Players Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {players.map(player => (
-            <button
-              key={player.id}
-              onClick={() => togglePlayerSelection(player)}
-              className={`p-3 rounded-lg border-2 transition ${
-                selectedPlayers.find(p => p.id === player.id)
-                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-900 dark:border-blue-400'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-gray-700'
-              }`}
-            >
-              <p className="font-semibold text-gray-800 dark:text-white text-sm truncate">{player.name}</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                Score: {calculatePlayerScore(player).toFixed(1)}
-              </p>
-            </button>
-          ))}
+          {filteredPlayers.map(player => {
+            const isSelected = selectedPlayers.find(p => p.id === player.id);
+            const score = calculatePlayerScore(player);
+            
+            return (
+              <button
+                key={player.id}
+                onClick={() => togglePlayerSelection(player)}
+                className={`p-4 rounded-xl border-2 transition-all text-left ${
+                  isSelected
+                    ? 'border-primary-blue bg-primary-blue/10 shadow-lg shadow-primary-blue/25'
+                    : 'border-dark-border hover:border-primary-blue/50 bg-dark-bg'
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-blue to-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {player.name.charAt(0)}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">{player.name}</p>
+                    <p className="text-text-secondary text-xs">{getPositionShorthand(player.position)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-text-secondary text-xs">OVR</span>
+                  <span className={`font-bold text-sm ${
+                    score > 5 ? 'text-success-green' : 
+                    score > 2 ? 'text-warning-orange' : 
+                    'text-text-secondary'
+                  }`}>
+                    {Math.round(score * 10)}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {/* Generated Teams */}
       {team1.length > 0 && team2.length > 0 && (
-        <>
-          {/* Team Size Info */}
-          <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 text-center">
-            <p className="text-blue-800 dark:text-blue-200 font-semibold">
-              Team Distribution: {team1.length} vs {team2.length} players
-              {team1.length === team2.length && ' ✓ Perfectly Balanced'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Team 1 */}
-            <div className="bg-blue-50 dark:bg-blue-900 rounded-lg shadow-lg p-4 sm:p-6">
-              <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-4">
-                Team 1 ({team1.length} players)
-                <span className="text-sm font-normal block mt-1">Score: {getTeamTotalScore(team1)}</span>
-              </h3>
-              <div className="space-y-2">
-                {team1.map(player => (
-                  <div key={player.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                    <p className="font-semibold text-gray-800 dark:text-white">{player.name}</p>
-                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      <span>Goals: {player.total_goals}</span>
-                      <span>Assists: {player.total_assists}</span>
-                      <span>Matches: {player.matches_played}</span>
-                    </div>
-                  </div>
-                ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Team A Players */}
+          <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+            <h3 className="text-white text-lg font-bold mb-4 flex items-center gap-2">
+              <div className="w-6 h-6 bg-primary-blue rounded-lg flex items-center justify-center">
+                <span className="text-white text-xs font-bold">A</span>
               </div>
-            </div>
-
-            {/* Team 2 */}
-            <div className="bg-green-50 dark:bg-green-900 rounded-lg shadow-lg p-4 sm:p-6">
-              <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-4">
-                Team 2 ({team2.length} players)
-                <span className="text-sm font-normal block mt-1">Score: {getTeamTotalScore(team2)}</span>
-              </h3>
-              <div className="space-y-2">
-                {team2.map(player => (
-                  <div key={player.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                    <p className="font-semibold text-gray-800 dark:text-white">{player.name}</p>
-                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      <span>Goals: {player.total_goals}</span>
-                      <span>Assists: {player.total_assists}</span>
-                      <span>Matches: {player.matches_played}</span>
-                    </div>
+              Team A
+            </h3>
+            <div className="space-y-2">
+              {team1.map(player => (
+                <div key={player.id} className="bg-dark-bg rounded-xl p-3 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-blue to-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">{player.name.charAt(0)}</span>
                   </div>
-                ))}
-              </div>
+                  <div className="flex-1">
+                    <p className="text-white font-semibold text-sm">{player.name}</p>
+                    <p className="text-text-secondary text-xs">{getPositionShorthand(player.position)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-text-secondary">Goals: {player.total_goals}</p>
+                    <p className="text-xs text-text-secondary">Assists: {player.total_assists}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </>
+
+          {/* Team B Players */}
+          <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+            <h3 className="text-white text-lg font-bold mb-4 flex items-center gap-2">
+              <div className="w-6 h-6 bg-warning-orange rounded-lg flex items-center justify-center">
+                <span className="text-white text-xs font-bold">B</span>
+              </div>
+              Team B
+            </h3>
+            <div className="space-y-2">
+              {team2.map(player => (
+                <div key={player.id} className="bg-dark-bg rounded-xl p-3 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-warning-orange to-orange-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">{player.name.charAt(0)}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-semibold text-sm">{player.name}</p>
+                    <p className="text-text-secondary text-xs">{getPositionShorthand(player.position)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-text-secondary">Goals: {player.total_goals}</p>
+                    <p className="text-xs text-text-secondary">Assists: {player.total_assists}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
