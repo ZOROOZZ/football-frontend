@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, Key, Trash2, X, UserPlus, Shield } from 'lucide-react';
+import { Plus, Key, Trash2, X, UserPlus, Shield } from 'lucide-react';
 
 const UserManagement = ({ token, currentUser }) => {
   const [users, setUsers] = useState([]);
