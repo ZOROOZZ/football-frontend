@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Shuffle, Search } from 'lucide-react';
-
+import { Users, Shuffle } from 'lucide-react';
 const TeamGenerator = ({ token }) => {
   const [players, setPlayers] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState([]);
