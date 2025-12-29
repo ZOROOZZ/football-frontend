@@ -1,6 +1,6 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Calendar, Users, Target, TrendingUp, ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Calendar, Users, Target, TrendingUp, ArrowUp, ChevronRight } from 'lucide-react';
 
 const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNavigate }) => {
   const getTopScorers = () => {
