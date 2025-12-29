@@ -1,83 +1,52 @@
 import React from 'react';
-import { Target, LogOut, Menu } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
+import { Menu, User, Settings } from 'lucide-react';
 
-const Header = ({ currentUser, onLogout, error, showThemeToggle, onMenuToggle }) => {
+const Header = ({ currentUser, onMenuToggle, activeTab }) => {
+  const getPageTitle = () => {
+    const titles = {
+      dashboard: 'Dashboard',
+      addMatch: 'New Match',
+      players: 'Players',
+      goalkeeper: 'Goalkeepers',
+      teamgen: 'Team Builder',
+      settings: 'Settings'
+    };
+    return titles[activeTab] || 'Dashboard';
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
-      <div className="flex justify-between items-center">
-        {/* Left Side - Menu + Title */}
-        <div className="flex items-center gap-3">
-          {/* Hamburger Menu Button */}
+    <div className="bg-dark-card border-b border-dark-border px-4 py-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* Left: Menu + Title */}
+        <div className="flex items-center gap-4">
           <button
             onClick={onMenuToggle}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0"
-            title="Open Menu"
+            className="p-2 hover:bg-dark-bg rounded-xl transition-colors"
           >
-            <Menu className="text-gray-600 dark:text-gray-400" size={24} />
+            <Menu className="text-white" size={24} />
           </button>
           
-          {/* Title and Logo */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Target className="text-blue-600 dark:text-blue-400 flex-shrink-0" size={28} />
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-white leading-tight">
-                Football Match Tracker
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-                Track your team's performance and player statistics
-              </p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-blue to-blue-600 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/>
+              </svg>
             </div>
+            <h1 className="text-2xl font-bold text-white">{getPageTitle()}</h1>
           </div>
         </div>
-        
-        {/* Right Side - Theme Toggle + User Info */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {showThemeToggle && <ThemeToggle />}
-          <div className="text-right hidden sm:block">
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">
-              {currentUser.username}{' '}
-              <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">
-                {currentUser.role}
-              </span>
-            </p>
-            <button
-              onClick={onLogout}
-              className="flex items-center gap-1.5 bg-red-600 text-white px-2 sm:px-3 py-1 rounded hover:bg-red-700 text-xs sm:text-sm ml-auto"
-            >
-              <LogOut size={14} />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+
+        {/* Right: User Info */}
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:block text-right">
+            <p className="text-white font-medium text-sm">{currentUser.username}</p>
+            <p className="text-text-secondary text-xs capitalize">{currentUser.role}</p>
           </div>
-          
-          {/* Mobile User Menu */}
-          <div className="sm:hidden">
-            <button
-              onClick={onLogout}
-              className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              title="Logout"
-            >
-              <LogOut size={18} />
-            </button>
+          <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+            <User className="text-white" size={20} />
           </div>
         </div>
       </div>
-      
-      {/* Mobile User Info */}
-      <div className="sm:hidden mt-3 pt-3 border-t dark:border-gray-700">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Logged in as: <span className="font-semibold">{currentUser.username}</span>{' '}
-          <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">
-            {currentUser.role}
-          </span>
-        </p>
-      </div>
-      
-      {error && (
-        <div className="mt-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
     </div>
   );
 };
