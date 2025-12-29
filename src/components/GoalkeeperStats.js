@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, TrendingUp, Award, Target } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Shield, Award, Target, TrendingUp, ChevronRight } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const GoalkeeperStats = ({ token }) => {
   const [goalkeepers, setGoalkeepers] = useState([]);
@@ -41,136 +41,168 @@ const GoalkeeperStats = ({ token }) => {
 
   const getTopGoalkeepers = () => {
     return [...goalkeepers]
-      .sort((a, b) => b.clean_sheets - a.clean_sheets)
+      .sort((a, b) => (b.clean_sheets || 0) - (a.clean_sheets || 0))
       .slice(0, 5);
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-blue"></div>
       </div>
     );
   }
 
   if (goalkeepers.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
-        <Shield className="mx-auto text-gray-300 mb-4" size={64} />
-        <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">No goalkeepers yet</h3>
-        <p className="text-gray-500 dark:text-gray-500">Add players with Goalkeeper position to see stats</p>
+      <div className="p-4 md:p-6 max-w-7xl mx-auto">
+        <div className="bg-dark-card rounded-2xl p-12 text-center shadow-card">
+          <div className="w-16 h-16 bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="text-text-secondary" size={32} />
+          </div>
+          <h3 className="text-white text-xl font-semibold mb-2">No goalkeepers yet</h3>
+          <p className="text-text-secondary">Add players with Goalkeeper position to see stats</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Total Goalkeepers</p>
-              <p className="text-2xl sm:text-3xl font-bold text-blue-600">{goalkeepers.length}</p>
+    <div className="p-4 md:p-6 max-w-7xl mx-auto animate-fadeIn space-y-6">
+      {/* Header Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center">
+              <Shield className="text-purple-500" size={20} />
             </div>
-            <Shield className="text-blue-600" size={32} />
           </div>
+          <p className="text-text-secondary text-sm mb-1">Total Goalkeepers</p>
+          <p className="text-white text-3xl font-bold">{goalkeepers.length}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Clean Sheets</p>
-              <p className="text-2xl sm:text-3xl font-bold text-green-600">
-                {goalkeepers.reduce((sum, gk) => sum + (gk.clean_sheets || 0), 0)}
-              </p>
+
+        <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-success-green/10 rounded-xl flex items-center justify-center">
+              <Award className="text-success-green" size={20} />
             </div>
-            <Award className="text-green-600" size={32} />
           </div>
+          <p className="text-text-secondary text-sm mb-1">Clean Sheets</p>
+          <p className="text-white text-3xl font-bold">
+            {goalkeepers.reduce((sum, gk) => sum + (gk.clean_sheets || 0), 0)}
+          </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Total Saves</p>
-              <p className="text-2xl sm:text-3xl font-bold text-purple-600">
-                {goalkeepers.reduce((sum, gk) => sum + (gk.total_saves || 0), 0)}
-              </p>
+
+        <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-primary-blue/10 rounded-xl flex items-center justify-center">
+              <Target className="text-primary-blue" size={20} />
             </div>
-            <Target className="text-purple-600" size={32} />
           </div>
+          <p className="text-text-secondary text-sm mb-1">Total Saves</p>
+          <p className="text-white text-3xl font-bold">
+            {goalkeepers.reduce((sum, gk) => sum + (gk.total_saves || 0), 0)}
+          </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Penalty Saves</p>
-              <p className="text-2xl sm:text-3xl font-bold text-red-600">
-                {goalkeepers.reduce((sum, gk) => sum + (gk.total_penalties_saved || 0), 0)}
-              </p>
+
+        <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-warning-orange/10 rounded-xl flex items-center justify-center">
+              <TrendingUp className="text-warning-orange" size={20} />
             </div>
-            <TrendingUp className="text-red-600" size={32} />
           </div>
+          <p className="text-text-secondary text-sm mb-1">Penalty Saves</p>
+          <p className="text-white text-3xl font-bold">
+            {goalkeepers.reduce((sum, gk) => sum + (gk.total_penalties_saved || 0), 0)}
+          </p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Clean Sheets Leaderboard</h2>
+      {/* Clean Sheets Leaderboard Chart */}
+      <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+        <h2 className="text-white text-xl font-bold mb-6">Clean Sheets Leaderboard</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={getTopGoalkeepers()}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: '12px' }} />
-            <Bar dataKey="clean_sheets" fill="#10b981" name="Clean Sheets" />
+          <BarChart data={getTopGoalkeepers()} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2a3647" />
+            <XAxis 
+              dataKey="name" 
+              tick={{ fontSize: 12, fill: '#8b92a7' }}
+              angle={-35}
+              textAnchor="end"
+              height={80}
+            />
+            <YAxis tick={{ fontSize: 12, fill: '#8b92a7' }} />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: '#1a2332', 
+                border: '1px solid #2a3647',
+                borderRadius: '12px',
+                color: '#fff'
+              }}
+            />
+            <Bar dataKey="clean_sheets" fill="#10b981" name="Clean Sheets" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {goalkeepers.map(gk => (
-          <div key={gk.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                <Shield className="text-blue-600 dark:text-blue-400" size={24} />
+      {/* Goalkeepers List */}
+      <div className="space-y-3">
+        {goalkeepers.map((gk, index) => (
+          <div
+            key={gk.id}
+            className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all group cursor-pointer"
+          >
+            <div className="flex items-center gap-4">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <Shield className="text-white" size={28} />
+                </div>
+                {index < 3 && (
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success-green rounded-full flex items-center justify-center border-2 border-dark-card">
+                    <span className="text-white text-xs font-bold">{index + 1}</span>
+                  </div>
+                )}
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-white">{gk.name}</h3>
-                <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-                  Goalkeeper
-                </span>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Matches:</span>
-                <span className="font-semibold text-gray-800 dark:text-white">{gk.matches_played || 0}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Clean Sheets:</span>
-                <span className="font-semibold text-green-600 dark:text-green-400">{gk.clean_sheets || 0}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Total Saves:</span>
-                <span className="font-semibold text-purple-600 dark:text-purple-400">{gk.total_saves || 0}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Save %:</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400">{calculateSavePercentage(gk)}%</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Goals/Match:</span>
-                <span className="font-semibold text-red-600 dark:text-red-400">{calculateGoalsPerMatch(gk)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Penalty Saves:</span>
-                <span className="font-semibold text-orange-600 dark:text-orange-400">
-                  {gk.total_penalties_saved || 0}/{gk.total_penalties_faced || 0}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm pt-2 border-t dark:border-gray-700">
-                <span className="text-gray-600 dark:text-gray-400">Cards:</span>
-                <div className="flex gap-2">
-                  <span className="text-yellow-600 dark:text-yellow-400">🟨 {gk.total_yellow_cards || 0}</span>
-                  <span className="text-red-600 dark:text-red-400">🟥 {gk.total_red_cards || 0}</span>
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-white font-bold text-lg truncate">{gk.name}</h3>
+                  <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded-lg font-medium">
+                    Goalkeeper
+                  </span>
+                  <ChevronRight className="ml-auto text-text-secondary group-hover:text-white transition-colors flex-shrink-0" size={20} />
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                  <div>
+                    <p className="text-text-secondary text-xs mb-0.5">MATCHES</p>
+                    <p className="text-white font-bold">{gk.matches_played || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-text-secondary text-xs mb-0.5">CLEAN SHEETS</p>
+                    <p className="text-success-green font-bold">{gk.clean_sheets || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-text-secondary text-xs mb-0.5">SAVES</p>
+                    <p className="text-primary-blue font-bold">{gk.total_saves || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-text-secondary text-xs mb-0.5">SAVE %</p>
+                    <p className="text-purple-400 font-bold">{calculateSavePercentage(gk)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-text-secondary text-xs mb-0.5">GOALS/MATCH</p>
+                    <p className="text-warning-orange font-bold">{calculateGoalsPerMatch(gk)}</p>
+                  </div>
+                  <div>
+                    <p className="text-text-secondary text-xs mb-0.5">PEN SAVES</p>
+                    <p className="text-error-red font-bold">
+                      {gk.total_penalties_saved || 0}/{gk.total_penalties_faced || 0}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
