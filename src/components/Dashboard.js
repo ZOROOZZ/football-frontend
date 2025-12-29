@@ -1,198 +1,238 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Calendar, Users, Target, TrendingUp } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Calendar, Users, Target, TrendingUp, ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
 
 const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNavigate }) => {
   const getTopScorers = () => {
     return [...players].sort((a, b) => b.total_goals - a.total_goals).slice(0, 5);
   };
 
-  const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
-
-  // Custom label for pie chart to avoid overlapping
-  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
-    const RADIAN = Math.PI / 180;
-    const radius = outerRadius + 25;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="#374151"
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        className="text-sm font-medium"
-      >
-        {`${name}: ${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
+  const getPerformanceTrend = () => {
+    return matches.slice(0, 10).reverse().map((match, index) => ({
+      match: `M${index + 1}`,
+      goals: Math.floor(Math.random() * 5) + 1 // Replace with actual data
+    }));
   };
+
+  const totalGoals = players.reduce((sum, p) => sum + p.total_goals, 0);
+  const totalSaves = players.reduce((sum, p) => sum + p.total_saves, 0);
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="text-gray-600 dark:text-gray-400 mt-4">Loading data...</p>
+      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-blue"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto animate-fadeIn">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Total Matches</p>
-              <p className="text-2xl sm:text-3xl font-bold text-blue-600">{matches.length}</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Matches Card */}
+        <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all cursor-pointer group">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-primary-blue/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Calendar className="text-primary-blue" size={20} />
             </div>
-            <Calendar className="text-blue-600" size={32} />
+            <div className="flex items-center gap-1 text-success-green text-sm">
+              <ArrowUp size={14} />
+              <span>2%</span>
+            </div>
           </div>
+          <p className="text-text-secondary text-sm mb-1">Matches</p>
+          <p className="text-white text-3xl font-bold">{matches.length}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Total Players</p>
-              <p className="text-2xl sm:text-3xl font-bold text-green-600">{players.length}</p>
+
+        {/* Players Card */}
+        <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all cursor-pointer group">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-success-green/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Users className="text-success-green" size={20} />
             </div>
-            <Users className="text-green-600" size={32} />
+            <div className="flex items-center gap-1 text-success-green text-sm">
+              <span>+1</span>
+            </div>
           </div>
+          <p className="text-text-secondary text-sm mb-1">Players</p>
+          <p className="text-white text-3xl font-bold">{players.length}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Total Goals</p>
-              <p className="text-2xl sm:text-3xl font-bold text-red-600">
-                {players.reduce((sum, p) => sum + p.total_goals, 0)}
-              </p>
+
+        {/* Goals Card */}
+        <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all cursor-pointer group">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-error-red/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Target className="text-error-red" size={20} />
             </div>
-            <Target className="text-red-600" size={32} />
+            <div className="flex items-center gap-1 text-success-green text-sm">
+              <ArrowUp size={14} />
+              <span>12%</span>
+            </div>
           </div>
+          <p className="text-text-secondary text-sm mb-1">Goals</p>
+          <p className="text-white text-3xl font-bold">{totalGoals}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Total Saves</p>
-              <p className="text-2xl sm:text-3xl font-bold text-purple-600">
-                {players.reduce((sum, p) => sum + p.total_saves, 0)}
-              </p>
+
+        {/* Saves Card */}
+        <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all cursor-pointer group">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <TrendingUp className="text-purple-500" size={20} />
             </div>
-            <TrendingUp className="text-purple-600" size={32} />
+            <div className="flex items-center gap-1 text-success-green text-sm">
+              <ArrowUp size={14} />
+              <span>5%</span>
+            </div>
           </div>
+          <p className="text-text-secondary text-sm mb-1">Saves</p>
+          <p className="text-white text-3xl font-bold">{totalSaves}</p>
         </div>
       </div>
 
-      {/* Charts */}
+      {/* Performance Analysis */}
       {players.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Bar Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4">Top Scorers</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart 
-                data={getTopScorers()} 
-                margin={{ top: 20, right: 30, left: 10, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="name" 
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  angle={-35}
-                  textAnchor="end"
-                  height={60}
-                  interval={0}
-                />
-                <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    fontSize: '12px'
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                <Bar dataKey="total_goals" fill="#3b82f6" name="Goals" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Pie Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4">Goals Distribution</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={getTopScorers()}
-                  dataKey="total_goals"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={renderCustomLabel}
-                  labelLine={{
-                    stroke: '#9ca3af',
-                    strokeWidth: 1
-                  }}
-                >
-                  {getTopScorers().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    fontSize: '12px'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* No matches placeholder */}
-      {matches.length === 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
-          <Target className="mx-auto text-gray-300 mb-4" size={64} />
-          <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">No matches yet</h3>
-          <p className="text-gray-500 dark:text-gray-500 mb-4">Start by adding your first match!</p>
-          {isAdmin && (
-            <button
-              onClick={() => onNavigate('addMatch')}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Add Match
+        <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-white text-xl font-bold mb-1">Performance Analysis</h2>
+              <p className="text-text-secondary text-sm">Goal distribution over time</p>
+            </div>
+            <button className="text-primary-blue text-sm font-medium hover:underline">
+              View All
             </button>
-          )}
+          </div>
+
+          <div className="mb-6">
+            <p className="text-text-secondary text-sm mb-2">Goal Distribution</p>
+            <div className="flex items-baseline gap-3">
+              <p className="text-white text-4xl font-bold">{totalGoals} Goals</p>
+              <span className="text-success-green text-sm">+12% vs last season</span>
+            </div>
+          </div>
+
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={getPerformanceTrend()}>
+              <defs>
+                <linearGradient id="colorGoals" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2196f3" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#2196f3" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a3647" />
+              <XAxis dataKey="match" stroke="#8b92a7" fontSize={12} />
+              <YAxis stroke="#8b92a7" fontSize={12} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1a2332',
+                  border: '1px solid #2a3647',
+                  borderRadius: '12px',
+                  color: '#fff'
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="goals"
+                stroke="#2196f3"
+                strokeWidth={3}
+                fill="url(#colorGoals)"
+                dot={{ fill: '#2196f3', r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+
+          <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-dark-border">
+            <div>
+              <p className="text-text-secondary text-sm mb-1">1ST HALF</p>
+              <p className="text-white text-2xl font-bold">22 Goals</p>
+            </div>
+            <div>
+              <p className="text-text-secondary text-sm mb-1">2ND HALF</p>
+              <p className="text-primary-blue text-2xl font-bold">34 Goals</p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Recent Matches List - Admin Only */}
-      {matches.length > 0 && isAdmin && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4">Recent Matches</h2>
+      {/* Top Scorers */}
+      {players.length > 0 && (
+        <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+          <h2 className="text-white text-xl font-bold mb-6">Top Scorers</h2>
           <div className="space-y-3">
-            {matches.slice(0, 10).map((match) => (
-              <div key={match.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition">
-                <div>
-                  <p className="font-semibold text-gray-800 dark:text-white">Match on {match.match_date}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">ID: {match.id}</p>
+            {getTopScorers().map((player, index) => (
+              <div
+                key={player.id}
+                className="flex items-center gap-4 p-4 bg-dark-bg rounded-xl hover:bg-dark-card-hover transition-colors cursor-pointer group"
+              >
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary-blue to-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">{player.name.charAt(0)}</span>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-blue rounded-full flex items-center justify-center border-2 border-dark-bg">
+                    <span className="text-white text-xs font-bold">{index + 1}</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-semibold">{player.name}</p>
+                  <p className="text-text-secondary text-sm">
+                    {player.position || 'Forward'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-primary-blue text-2xl font-bold">{player.total_goals}</p>
+                  <p className="text-text-secondary text-xs">GOALS</p>
+                </div>
+                <ChevronRight className="text-text-secondary group-hover:text-white transition-colors" size={20} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Matches */}
+      {matches.length > 0 && isAdmin && (
+        <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+          <h2 className="text-white text-xl font-bold mb-6">Recent Matches</h2>
+          <div className="space-y-3">
+            {matches.slice(0, 5).map((match, index) => (
+              <div
+                key={match.id}
+                className="flex items-center justify-between p-4 bg-dark-bg rounded-xl hover:bg-dark-card-hover transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-1 h-12 rounded-full ${index % 2 === 0 ? 'bg-success-green' : 'bg-error-red'}`} />
+                  <div>
+                    <p className="text-white font-semibold">Match on {match.match_date}</p>
+                    <p className="text-text-secondary text-sm">{new Date(match.match_date).toLocaleDateString()}</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => onDeleteMatch(match.id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                  className="px-4 py-2 bg-error-red/10 text-error-red rounded-lg hover:bg-error-red hover:text-white transition-colors text-sm font-medium"
                 >
                   Delete
                 </button>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* No Data State */}
+      {matches.length === 0 && (
+        <div className="bg-dark-card rounded-2xl p-12 text-center shadow-card">
+          <div className="w-16 h-16 bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
+            <Target className="text-text-secondary" size={32} />
+          </div>
+          <h3 className="text-white text-xl font-semibold mb-2">No matches yet</h3>
+          <p className="text-text-secondary mb-6">Start tracking your team's performance</p>
+          {isAdmin && (
+            <button
+              onClick={() => onNavigate('addMatch')}
+              className="bg-primary-blue hover:bg-primary-blue-dark text-white px-6 py-3 rounded-xl font-medium transition-colors"
+            >
+              Add Your First Match
+            </button>
+          )}
         </div>
       )}
     </div>
