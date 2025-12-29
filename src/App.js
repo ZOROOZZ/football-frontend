@@ -18,7 +18,6 @@ const App = () => {
   const [matches, setMatches] = useState([]);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = useCallback(() => {
@@ -35,7 +34,6 @@ const App = () => {
     if (!token) return;
     
     setLoading(true);
-    setError(null);
     try {
       const [matchesData, playersData] = await Promise.all([
         api.getMatches(token),
@@ -47,8 +45,6 @@ const App = () => {
       console.error('Error loading data:', error);
       if (error.message.includes('401')) {
         handleLogout();
-      } else {
-        setError('Failed to load data. Please refresh the page.');
       }
     } finally {
       setLoading(false);
@@ -82,7 +78,6 @@ const App = () => {
 
   const handleSubmitMatch = async (matchData) => {
     setLoading(true);
-    setError(null);
     try {
       await api.createMatch(token, matchData);
       await loadData();
