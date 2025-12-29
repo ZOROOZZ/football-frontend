@@ -135,7 +135,7 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-dark-bg">
       {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
@@ -143,55 +143,54 @@ const App = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isAdmin={isAdmin}
+        onLogout={handleLogout}
+        currentUser={currentUser}
       />
 
-      <div className="max-w-7xl mx-auto p-3 sm:p-6">
-        <Header
-          currentUser={currentUser}
-          onLogout={handleLogout}
-          error={error}
-          showThemeToggle={true}
-          onMenuToggle={() => setSidebarOpen(true)}
-        />
+      {/* Header */}
+      <Header
+        currentUser={currentUser}
+        onMenuToggle={() => setSidebarOpen(true)}
+        activeTab={activeTab}
+      />
 
-        {/* Content Area */}
-        <div className="space-y-4 sm:space-y-6">
-          {activeTab === 'dashboard' && (
-            <Dashboard
-              matches={matches}
-              players={players}
-              loading={loading}
-              isAdmin={isAdmin}
-              onDeleteMatch={handleDeleteMatch}
-              onNavigate={setActiveTab}
-            />
-          )}
+      {/* Main Content */}
+      <main>
+        {activeTab === 'dashboard' && (
+          <Dashboard
+            matches={matches}
+            players={players}
+            loading={loading}
+            isAdmin={isAdmin}
+            onDeleteMatch={handleDeleteMatch}
+            onNavigate={setActiveTab}
+          />
+        )}
 
-          {activeTab === 'addMatch' && isAdmin && (
-            <AddMatch onSubmit={handleSubmitMatch} loading={loading} />
-          )}
+        {activeTab === 'addMatch' && isAdmin && (
+          <AddMatch onSubmit={handleSubmitMatch} loading={loading} />
+        )}
 
-          {activeTab === 'players' && (
-            <Players
-              players={players}
-              isAdmin={isAdmin}
-              onDeletePlayer={handleDeletePlayer}
-            />
-          )}
+        {activeTab === 'players' && (
+          <Players
+            players={players}
+            isAdmin={isAdmin}
+            onDeletePlayer={handleDeletePlayer}
+          />
+        )}
 
-          {activeTab === 'goalkeeper' && (
-            <GoalkeeperStats token={token} />
-          )}
+        {activeTab === 'goalkeeper' && (
+          <GoalkeeperStats token={token} />
+        )}
 
-          {activeTab === 'teamgen' && isAdmin && (
-            <TeamGenerator token={token} />
-          )}
+        {activeTab === 'teamgen' && isAdmin && (
+          <TeamGenerator token={token} />
+        )}
 
-          {activeTab === 'settings' && isAdmin && (
-            <UserManagement token={token} currentUser={currentUser} />
-          )}
-        </div>
-      </div>
+        {activeTab === 'settings' && isAdmin && (
+          <UserManagement token={token} currentUser={currentUser} />
+        )}
+      </main>
     </div>
   );
 };
