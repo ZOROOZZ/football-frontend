@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, Shuffle } from 'lucide-react';
+
 const TeamGenerator = ({ token }) => {
   const [players, setPlayers] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState([]);
@@ -48,7 +49,11 @@ const TeamGenerator = ({ token }) => {
       return;
     }
 
-    const sortedPlayers = [...selectedPlayers].sort((a, b) => 
+    // Shuffle array for randomness
+    const shuffled = [...selectedPlayers].sort(() => Math.random() - 0.5);
+    
+    // Sort by score after shuffle
+    const sortedPlayers = shuffled.sort((a, b) => 
       calculatePlayerScore(b) - calculatePlayerScore(a)
     );
 
@@ -58,19 +63,29 @@ const TeamGenerator = ({ token }) => {
 
     const t1 = [];
     const t2 = [];
+    let t1Score = 0;
+    let t2Score = 0;
 
-    sortedPlayers.forEach((player, index) => {
-      if (index % 4 === 0 || index % 4 === 3) {
+    // Distribute players randomly but balanced
+    sortedPlayers.forEach((player) => {
+      const playerScore = calculatePlayerScore(player);
+      
+      // Add to team with lower score or randomly if equal
+      if (t1.length < team1Size && (t1Score <= t2Score || t2.length >= team2Size)) {
         if (t1.length < team1Size) {
           t1.push(player);
+          t1Score += playerScore;
         } else {
           t2.push(player);
+          t2Score += playerScore;
         }
       } else {
         if (t2.length < team2Size) {
           t2.push(player);
+          t2Score += playerScore;
         } else {
           t1.push(player);
+          t1Score += playerScore;
         }
       }
     });
@@ -190,9 +205,8 @@ const TeamGenerator = ({ token }) => {
           </h3>
         </div>
 
-        {/* Search & Filters */}
+        {/* Filters */}
         <div className="space-y-4 mb-6">
-          {/* Search disabled for now - can enable if needed */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2">
             {positions.map(position => (
               <button
