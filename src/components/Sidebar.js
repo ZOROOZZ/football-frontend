@@ -1,13 +1,16 @@
 import React from 'react';
-import { TrendingUp, Plus, Users, Settings, Shuffle, Shield, X, LogOut } from 'lucide-react';
+import { TrendingUp, Plus, Users, Settings, Shuffle, Shield, X, LogOut, Target } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose, activeTab, setActiveTab, isAdmin, onLogout, currentUser }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp, show: true },
-    { id: 'addMatch', label: 'New Match', icon: Plus, show: isAdmin },
+    { id: 'addMatch', label: 'Add Match', icon: Plus, show: isAdmin },
     { id: 'players', label: 'Players', icon: Users, show: true },
     { id: 'teamgen', label: 'Team Builder', icon: Shuffle, show: isAdmin },
     { id: 'goalkeeper', label: 'Goalkeepers', icon: Shield, show: true },
+    { id: 'forward', label: 'Forwards', icon: Target, show: true },
+    { id: 'midfielder', label: 'Midfielders', icon: Users, show: true },
+    { id: 'defender', label: 'Defenders', icon: Shield, show: true },
     { id: 'settings', label: 'Settings', icon: Settings, show: isAdmin },
   ];
 
