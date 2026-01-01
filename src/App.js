@@ -1,3 +1,5 @@
+// Update your App.js to include position-specific tabs
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Login from './components/Login';
 import Header from './components/Header';
@@ -8,6 +10,7 @@ import Players from './components/Players';
 import UserManagement from './components/UserManagement';
 import TeamGenerator from './components/TeamGenerator';
 import GoalkeeperStats from './components/GoalkeeperStats';
+import PositionStats from './components/PositionStats'; // NEW COMPONENT
 import { api } from './services/api';
 
 const App = () => {
@@ -19,6 +22,8 @@ const App = () => {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ... (keep all existing functions: handleLogout, loadData, etc.)
 
   const handleLogout = useCallback(() => {
     setToken(null);
@@ -131,7 +136,6 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-dark-bg">
-      {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -142,14 +146,12 @@ const App = () => {
         currentUser={currentUser}
       />
 
-      {/* Header */}
       <Header
         currentUser={currentUser}
         onMenuToggle={() => setSidebarOpen(true)}
         activeTab={activeTab}
       />
 
-      {/* Main Content */}
       <main>
         {activeTab === 'dashboard' && (
           <Dashboard
@@ -174,8 +176,21 @@ const App = () => {
           />
         )}
 
+        {/* Position-specific tabs */}
         {activeTab === 'goalkeeper' && (
-          <GoalkeeperStats token={token} />
+          <PositionStats token={token} position="Goalkeeper" />
+        )}
+
+        {activeTab === 'defender' && (
+          <PositionStats token={token} position="Defender" />
+        )}
+
+        {activeTab === 'midfielder' && (
+          <PositionStats token={token} position="Midfielder" />
+        )}
+
+        {activeTab === 'forward' && (
+          <PositionStats token={token} position="Forward" />
         )}
 
         {activeTab === 'teamgen' && isAdmin && (
