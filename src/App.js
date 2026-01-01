@@ -9,7 +9,7 @@ import AddMatch from './components/AddMatch';
 import Players from './components/Players';
 import UserManagement from './components/UserManagement';
 import TeamGenerator from './components/TeamGenerator';
-import GoalkeeperStats from './components/GoalkeeperStats';
+#import GoalkeeperStats from './components/GoalkeeperStats';
 import PositionStats from './components/PositionStats'; // NEW COMPONENT
 import { api } from './services/api';
 
