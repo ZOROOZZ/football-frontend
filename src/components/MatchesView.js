@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Users, Target, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
 
 const MatchesView = ({ matches, isAdmin, onDeleteMatch }) => {
   const [expandedMatch, setExpandedMatch] = useState(null);
