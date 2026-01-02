@@ -1,17 +1,29 @@
 import React from 'react';
-import { TrendingUp, Plus, Users, Settings, Shuffle, Shield, X, LogOut, Target } from 'lucide-react';
+import { 
+  TrendingUp, 
+  Plus, 
+  Users, 
+  Settings, 
+  Shuffle, 
+  Shield, 
+  X, 
+  LogOut, 
+  Target, 
+  Calendar 
+} from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose, activeTab, setActiveTab, isAdmin, onLogout, currentUser }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp, show: true },
     { id: 'addMatch', label: 'Add Match', icon: Plus, show: isAdmin },
-    { id: 'players', label: 'Players', icon: Users, show: true },
+    { id: 'matches', label: 'Match History', icon: Calendar, show: true },
+    { id: 'players', label: 'All Players', icon: Users, show: true },
     { id: 'teamgen', label: 'Team Builder', icon: Shuffle, show: isAdmin },
     { id: 'goalkeeper', label: 'Goalkeepers', icon: Shield, show: true },
-    { id: 'forward', label: 'Forwards', icon: Target, show: true },
-    { id: 'midfielder', label: 'Midfielders', icon: Users, show: true },
     { id: 'defender', label: 'Defenders', icon: Shield, show: true },
-    { id: 'settings', label: 'Settings', icon: Settings, show: isAdmin },
+    { id: 'midfielder', label: 'Midfielders', icon: Users, show: true },
+    { id: 'forward', label: 'Forwards', icon: Target, show: true },
+    { id: 'settings', label: 'Admin Settings', icon: Settings, show: isAdmin },
   ];
 
   const handleMenuClick = (tabId) => {
@@ -44,27 +56,30 @@ const Sidebar = ({ isOpen, onClose, activeTab, setActiveTab, isAdmin, onLogout, 
               </svg>
             </div>
             <div>
-              <h2 className="text-white font-bold">Football Tracker</h2>
-              <p className="text-text-secondary text-xs">Menu</p>
+              <h2 className="text-white font-bold text-lg">Football Tracker</h2>
+              <p className="text-text-secondary text-xs">League Management</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-dark-bg rounded-lg transition-colors"
+            className="p-2 hover:bg-dark-bg rounded-lg transition-colors md:hidden"
           >
             <X size={20} className="text-text-secondary" />
           </button>
         </div>
 
-        {/* User Info */}
-        <div className="p-4 border-b border-dark-border">
-          <div className="flex items-center gap-3 p-3 bg-dark-bg rounded-xl">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold">{currentUser.username.charAt(0).toUpperCase()}</span>
+        {/* User Info Card */}
+        <div className="p-4">
+          <div className="flex items-center gap-3 p-3 bg-dark-bg/50 border border-dark-border rounded-xl">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">
+              {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium truncate">{currentUser.username}</p>
-              <p className="text-text-secondary text-xs capitalize">{currentUser.role}</p>
+              <p className="text-white font-medium truncate text-sm">{currentUser?.username}</p>
+              <div className="flex items-center gap-1.5">
+                <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+                <p className="text-text-secondary text-[10px] uppercase tracking-wider font-bold">{currentUser?.role}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -80,27 +95,27 @@ const Sidebar = ({ isOpen, onClose, activeTab, setActiveTab, isAdmin, onLogout, 
               <button
                 key={item.id}
                 onClick={() => handleMenuClick(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
                   isActive
-                    ? 'bg-primary-blue text-white shadow-lg shadow-primary-blue/25'
+                    ? 'bg-primary-blue text-white shadow-lg shadow-primary-blue/20'
                     : 'text-text-secondary hover:text-white hover:bg-dark-bg'
                 }`}
               >
-                <Icon size={20} />
-                <span>{item.label}</span>
+                <Icon size={18} />
+                <span className="text-sm">{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* Logout Button */}
+        {/* Logout Section */}
         <div className="p-4 border-t border-dark-border">
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium text-error-red hover:bg-error-red/10 transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-400/10 transition-all"
           >
-            <LogOut size={20} />
-            <span>Logout</span>
+            <LogOut size={18} />
+            <span className="text-sm">Logout</span>
           </button>
         </div>
       </div>
