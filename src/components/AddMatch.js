@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, X, Calendar, Users as UsersIcon, Target, Award } from 'lucide-react';
+import { Plus, X, Calendar, Users as UsersIcon } from 'lucide-react';;
 
 const AddMatch = ({ onSubmit, loading, token }) => {
   const [matchDate, setMatchDate] = useState('');
