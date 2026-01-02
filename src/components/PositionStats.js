@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, Award, Target, TrendingUp, ChevronRight, Swords, Users } from 'lucide-react';
+import { Shield, Award, Target, TrendingUp, ChevronRight, Users } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const PositionStats = ({ token, position }) => {
