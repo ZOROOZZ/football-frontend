@@ -1,10 +1,22 @@
 import React from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Calendar, Users, Target, TrendingUp, ArrowUp, ChevronRight } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar } from 'recharts';
+import { Calendar, Users, Target, TrendingUp, ArrowUp, ChevronRight, Shield } from 'lucide-react';
+import { detectPosition } from '../utils/playerUtils';
 
 const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNavigate }) => {
   const getTopScorers = () => {
-    return [...players].sort((a, b) => b.total_goals - a.total_goals).slice(0, 5);
+    const forwards = players.filter(p => detectPosition(p) === 'Forward');
+    return forwards.sort((a, b) => b.total_goals - a.total_goals).slice(0, 5);
+  };
+
+  const getTopGoalkeepers = () => {
+    const goalkeepers = players.filter(p => detectPosition(p) === 'Goalkeeper');
+    return goalkeepers.sort((a, b) => (b.clean_sheets || 0) - (a.clean_sheets || 0)).slice(0, 5);
+  };
+
+  const getTopPlaymakers = () => {
+    const midfielders = players.filter(p => detectPosition(p) === 'Midfielder');
+    return midfielders.sort((a, b) => b.total_assists - a.total_assists).slice(0, 5);
   };
 
   const getPerformanceTrend = () => {
@@ -16,6 +28,7 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
 
   const totalGoals = players.reduce((sum, p) => sum + p.total_goals, 0);
   const totalSaves = players.reduce((sum, p) => sum + p.total_saves, 0);
+  const totalAssists = players.reduce((sum, p) => sum + p.total_assists, 0);
 
   if (loading) {
     return (
@@ -73,7 +86,7 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
           <p className="text-white text-3xl font-bold">{totalGoals}</p>
         </div>
 
-        {/* Saves Card */}
+        {/* Assists Card */}
         <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all cursor-pointer group">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -84,8 +97,8 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
               <span>5%</span>
             </div>
           </div>
-          <p className="text-text-secondary text-sm mb-1">Saves</p>
-          <p className="text-white text-3xl font-bold">{totalSaves}</p>
+          <p className="text-text-secondary text-sm mb-1">Assists</p>
+          <p className="text-white text-3xl font-bold">{totalAssists}</p>
         </div>
       </div>
 
@@ -139,47 +152,142 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
               />
             </LineChart>
           </ResponsiveContainer>
-
-          <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-dark-border">
-            <div>
-              <p className="text-text-secondary text-sm mb-1">1ST HALF</p>
-              <p className="text-white text-2xl font-bold">22 Goals</p>
-            </div>
-            <div>
-              <p className="text-text-secondary text-sm mb-1">2ND HALF</p>
-              <p className="text-primary-blue text-2xl font-bold">34 Goals</p>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* Top Scorers */}
-      {players.length > 0 && (
+      {/* Top Scorers (Forwards) */}
+      {getTopScorers().length > 0 && (
         <div className="bg-dark-card rounded-2xl p-6 shadow-card">
-          <h2 className="text-white text-xl font-bold mb-6">Top Scorers</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-white text-xl font-bold mb-1">Top Scorers (Forwards)</h2>
+              <p className="text-text-secondary text-sm">Best goal scorers in the squad</p>
+            </div>
+            <button 
+              onClick={() => onNavigate('forward')}
+              className="text-primary-blue text-sm font-medium hover:underline"
+            >
+              View All
+            </button>
+          </div>
+
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={getTopScorers()} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a3647" />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fontSize: 12, fill: '#8b92a7' }}
+                angle={-35}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis tick={{ fontSize: 12, fill: '#8b92a7' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1a2332', 
+                  border: '1px solid #2a3647',
+                  borderRadius: '12px',
+                  color: '#fff'
+                }}
+              />
+              <Bar dataKey="total_goals" fill="#ef4444" name="Goals" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Top Playmakers (Midfielders) */}
+      {getTopPlaymakers().length > 0 && (
+        <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-white text-xl font-bold mb-1">Top Playmakers (Midfielders)</h2>
+              <p className="text-text-secondary text-sm">Most assists in the squad</p>
+            </div>
+            <button 
+              onClick={() => onNavigate('midfielder')}
+              className="text-primary-blue text-sm font-medium hover:underline"
+            >
+              View All
+            </button>
+          </div>
+
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={getTopPlaymakers()} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a3647" />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fontSize: 12, fill: '#8b92a7' }}
+                angle={-35}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis tick={{ fontSize: 12, fill: '#8b92a7' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1a2332', 
+                  border: '1px solid #2a3647',
+                  borderRadius: '12px',
+                  color: '#fff'
+                }}
+              />
+              <Bar dataKey="total_assists" fill="#10b981" name="Assists" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Top Goalkeepers */}
+      {getTopGoalkeepers().length > 0 && (
+        <div className="bg-dark-card rounded-2xl p-6 shadow-card">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-white text-xl font-bold mb-1">Top Goalkeepers</h2>
+              <p className="text-text-secondary text-sm">Most clean sheets</p>
+            </div>
+            <button 
+              onClick={() => onNavigate('goalkeeper')}
+              className="text-primary-blue text-sm font-medium hover:underline"
+            >
+              View All
+            </button>
+          </div>
+
           <div className="space-y-3">
-            {getTopScorers().map((player, index) => (
+            {getTopGoalkeepers().map((gk, index) => (
               <div
-                key={player.id}
+                key={gk.id}
                 className="flex items-center gap-4 p-4 bg-dark-bg rounded-xl hover:bg-dark-card-hover transition-colors cursor-pointer group"
               >
                 <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary-blue to-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">{player.name.charAt(0)}</span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <Shield className="text-white" size={24} />
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-blue rounded-full flex items-center justify-center border-2 border-dark-bg">
-                    <span className="text-white text-xs font-bold">{index + 1}</span>
-                  </div>
+                  {index < 3 && (
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-blue rounded-full flex items-center justify-center border-2 border-dark-bg">
+                      <span className="text-white text-xs font-bold">{index + 1}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1">
-                  <p className="text-white font-semibold">{player.name}</p>
-                  <p className="text-text-secondary text-sm">
-                    {player.position || 'Forward'}
-                  </p>
+                  <p className="text-white font-semibold">{gk.name}</p>
+                  <p className="text-text-secondary text-sm">Goalkeeper</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-primary-blue text-2xl font-bold">{player.total_goals}</p>
-                  <p className="text-text-secondary text-xs">GOALS</p>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-success-green text-xl font-bold">{gk.clean_sheets || 0}</p>
+                    <p className="text-text-secondary text-xs">Clean Sheets</p>
+                  </div>
+                  <div>
+                    <p className="text-primary-blue text-xl font-bold">{gk.total_saves || 0}</p>
+                    <p className="text-text-secondary text-xs">Saves</p>
+                  </div>
+                  <div>
+                    <p className="text-purple-400 text-xl font-bold">
+                      {gk.total_shots_faced > 0 ? ((gk.total_saves / gk.total_shots_faced) * 100).toFixed(0) : 0}%
+                    </p>
+                    <p className="text-text-secondary text-xs">Save %</p>
+                  </div>
                 </div>
                 <ChevronRight className="text-text-secondary group-hover:text-white transition-colors" size={20} />
               </div>
