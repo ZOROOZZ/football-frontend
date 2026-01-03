@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, ChevronRight, Target, Users as UsersIcon, TrendingUp } from 'lucide-react';
+import { Search, ChevronRight, Target, Users as UsersIcon, TrendingUp, Shield } from 'lucide-react';
+import { detectPosition, getPositionColor, getPositionBadgeColor, getPlayerStyle } from '../utils/playerUtils';
 
 const Players = ({ players, isAdmin, onDeletePlayer }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -8,18 +9,10 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
 
   const positions = ['All Players', 'Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
 
-  const getPositionColor = (position) => {
-    const colors = {
-      'Forward': 'from-red-500 to-orange-500',
-      'Midfielder': 'from-green-500 to-emerald-500',
-      'Defender': 'from-blue-500 to-cyan-500',
-      'Goalkeeper': 'from-purple-500 to-pink-500'
-    };
-    return colors[position] || 'from-gray-500 to-gray-600';
-  };
-
   const getPlayerStats = (player) => {
-    if (player.position === 'Goalkeeper') {
+    const position = detectPosition(player);
+    
+    if (position === 'Goalkeeper') {
       return [
         { label: 'CLEAN SHEETS', value: player.clean_sheets || 0, color: 'text-success-green' },
         { label: 'SAVES', value: player.total_saves || 0, color: 'text-primary-blue' },
@@ -33,10 +26,24 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
     ];
   };
 
-  const filteredPlayers = players
+  const getPositionIcon = (position) => {
+    if (position === 'Goalkeeper') return Shield;
+    if (position === 'Forward') return Target;
+    if (position === 'Midfielder') return UsersIcon;
+    return Shield;
+  };
+
+  // Add automatic position to each player
+  const playersWithPosition = players.map(p => ({
+    ...p,
+    autoPosition: detectPosition(p),
+    playerStyle: getPlayerStyle(p)
+  }));
+
+  const filteredPlayers = playersWithPosition
     .filter(player => {
       const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesPosition = filterPosition === 'All Players' || player.position === filterPosition;
+      const matchesPosition = filterPosition === 'All Players' || player.autoPosition === filterPosition;
       return matchesSearch && matchesPosition;
     })
     .sort((a, b) => {
@@ -45,6 +52,14 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
       if (sortBy === 'matches') return (b.matches_played || 0) - (a.matches_played || 0);
       return 0;
     });
+
+  // Calculate position distribution
+  const positionStats = {
+    Forward: playersWithPosition.filter(p => p.autoPosition === 'Forward').length,
+    Midfielder: playersWithPosition.filter(p => p.autoPosition === 'Midfielder').length,
+    Defender: playersWithPosition.filter(p => p.autoPosition === 'Defender').length,
+    Goalkeeper: playersWithPosition.filter(p => p.autoPosition === 'Goalkeeper').length
+  };
 
   if (players.length === 0) {
     return (
@@ -67,11 +82,31 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-white text-2xl font-bold">Players</h2>
-            <p className="text-text-secondary text-sm mt-1">Manchester United</p>
+            <p className="text-text-secondary text-sm mt-1">Squad Overview</p>
           </div>
           <div className="text-right">
             <p className="text-text-secondary text-sm">Total Players</p>
             <p className="text-white text-2xl font-bold">{players.length}</p>
+          </div>
+        </div>
+
+        {/* Position Distribution */}
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 text-center">
+            <p className="text-red-400 text-lg font-bold">{positionStats.Forward}</p>
+            <p className="text-text-secondary text-xs">Forwards</p>
+          </div>
+          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2 text-center">
+            <p className="text-green-400 text-lg font-bold">{positionStats.Midfielder}</p>
+            <p className="text-text-secondary text-xs">Midfielders</p>
+          </div>
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 text-center">
+            <p className="text-blue-400 text-lg font-bold">{positionStats.Defender}</p>
+            <p className="text-text-secondary text-xs">Defenders</p>
+          </div>
+          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2 text-center">
+            <p className="text-purple-400 text-lg font-bold">{positionStats.Goalkeeper}</p>
+            <p className="text-text-secondary text-xs">Goalkeepers</p>
           </div>
         </div>
 
@@ -82,7 +117,7 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, position..."
+            placeholder="Search by name..."
             className="w-full bg-dark-bg border border-dark-border rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-text-secondary focus:outline-none focus:border-primary-blue transition-colors"
           />
         </div>
@@ -100,6 +135,7 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
               }`}
             >
               {position}
+              {position !== 'All Players' && ` (${positionStats[position] || 0})`}
             </button>
           ))}
         </div>
@@ -121,6 +157,8 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
       <div className="space-y-3">
         {filteredPlayers.map((player, index) => {
           const stats = getPlayerStats(player);
+          const PositionIcon = getPositionIcon(player.autoPosition);
+          
           return (
             <div
               key={player.id}
@@ -129,10 +167,8 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
               <div className="flex items-center gap-4">
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${getPositionColor(player.position)} rounded-full flex items-center justify-center`}>
-                    <span className="text-white text-xl font-bold">
-                      {player.name.charAt(0)}
-                    </span>
+                  <div className={`w-16 h-16 bg-gradient-to-br ${getPositionColor(player.autoPosition)} rounded-full flex items-center justify-center`}>
+                    <PositionIcon className="text-white" size={24} />
                   </div>
                   {index < 3 && (
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-blue rounded-full flex items-center justify-center border-2 border-dark-card">
@@ -143,13 +179,18 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
 
                 {/* Player Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="text-white font-semibold text-lg truncate">
                       {player.name}
                     </h3>
-                    <ChevronRight className="text-text-secondary group-hover:text-white transition-colors flex-shrink-0" size={20} />
+                    <span className={`text-xs px-2 py-1 rounded-lg font-medium ${getPositionBadgeColor(player.autoPosition)}`}>
+                      {player.autoPosition}
+                    </span>
+                    <span className="text-xs bg-dark-bg px-2 py-1 rounded text-text-secondary">
+                      {player.playerStyle}
+                    </span>
+                    <ChevronRight className="ml-auto text-text-secondary group-hover:text-white transition-colors flex-shrink-0" size={20} />
                   </div>
-                  <p className="text-text-secondary text-sm">{player.position || 'Forward'}</p>
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-3 gap-4 mt-3">
