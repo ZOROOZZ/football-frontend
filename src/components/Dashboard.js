@@ -27,7 +27,7 @@ const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNaviga
   };
 
   const totalGoals = players.reduce((sum, p) => sum + p.total_goals, 0);
-  const totalSaves = players.reduce((sum, p) => sum + p.total_saves, 0);
+  //const totalSaves = players.reduce((sum, p) => sum + p.total_saves, 0);
   const totalAssists = players.reduce((sum, p) => sum + p.total_assists, 0);
 
   if (loading) {
