@@ -6,8 +6,7 @@ export const detectPosition = (stats) => {
     total_goals: g = 0, 
     total_assists: a = 0, 
     total_saves: s = 0, 
-    total_shots_faced: sf = 0,
-    clean_sheets: cs = 0,
+    // Removed sf and cs from here as they were unused in this specific function
     matches_played: mp = 0
   } = stats;
 
@@ -22,7 +21,7 @@ export const detectPosition = (stats) => {
   const assistRatio = totalContribution > 0 ? a / totalContribution : 0;
   const savesPerMatch = mp > 0 ? s / mp : 0;
 
-  // 1. GOALKEEPER (Lowered thresholds for park football)
+  // 1. GOALKEEPER
   if (savesPerMatch >= 2 && g <= 1) {
     return 'Goalkeeper';
   }
@@ -40,7 +39,7 @@ export const detectPosition = (stats) => {
     return 'Forward';
   }
 
-  // 3. HYBRID ROLES (Common in park football)
+  // 3. HYBRID ROLES
   if (g >= 4 && a >= 4) {
     return 'Forward/Midfielder';
   }
@@ -49,13 +48,11 @@ export const detectPosition = (stats) => {
     return 'Midfielder/Defender';
   }
 
-  // 4. MIDFIELDER (The balance logic)
-  // Balanced G/A contributor - box-to-box style
+  // 4. MIDFIELDER
   if (g > 0 && a > 0 && Math.abs(g - a) <= 2) {
     return 'Midfielder';
   }
 
-  // Classic playmaker - creates more than scores
   if (assistRatio > 0.6 && a >= 3) {
     return 'Midfielder';
   }
@@ -135,7 +132,7 @@ export const getPlayerStyle = (stats) => {
     total_goals: g = 0, 
     total_assists: a = 0, 
     total_saves: s = 0, 
-    clean_sheets: cs = 0, // FIXED: Added this to destructuring to solve the build error
+    clean_sheets: cs = 0, 
     matches_played: mp = 0 
   } = stats;
 
