@@ -11,9 +11,15 @@ export const detectPosition = (stats) => {
     matches_played: mp = 0
   } = stats;
 
-  // 1. GOALKEEPER: Primary indicator is saves and shots faced
-  // Goalkeepers will have high save counts and face many shots
-  if (s > 5 || sf > 10 || cs > 1) {
+  // 1. GOALKEEPER: Primary indicator is HIGH saves and shots faced
+  // Only classify as GK if they have SIGNIFICANTLY high save stats
+  // AND very low goals (GKs rarely score)
+  if ((s > 15 || sf > 30) && g <= 2) {
+    return 'Goalkeeper';
+  }
+  
+  // Special case: If they have some clean sheets but also score goals, they're not a GK
+  if (cs > 2 && s > 10 && g <= 1 && a <= 1) {
     return 'Goalkeeper';
   }
 
