@@ -1,6 +1,6 @@
 import React from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { Calendar, Users, Target, TrendingUp, ArrowUp, ChevronRight, Shield, Award } from 'lucide-react';
+import { Calendar, Users, Target, TrendingUp, ArrowUp, ChevronRight } from 'lucide-react';
 import { detectPosition } from '../utils/playerUtils';
 
 const Dashboard = ({ matches, players, loading, isAdmin, onDeleteMatch, onNavigate }) => {
