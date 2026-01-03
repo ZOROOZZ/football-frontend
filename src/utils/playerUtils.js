@@ -23,72 +23,63 @@ export const detectPosition = (stats) => {
   const savesPerMatch = mp > 0 ? s / mp : 0;
 
   // 1. GOALKEEPER (Lowered thresholds for park football)
-  // GK faces fewer shots in friendlies
   if (savesPerMatch >= 2 && g <= 1) {
     return 'Goalkeeper';
   }
   
-  // Clear goalkeeper behavior
   if (s >= 5 && g === 0 && a <= 1) {
     return 'Goalkeeper';
   }
 
-  // 2. FORWARD (More forgiving for park games)
-  // Park strikers score less than pro players
+  // 2. FORWARD
   if (g >= 4 && g >= (a + 2)) {
     return 'Forward';
   }
 
-  // High goal ratio = natural finisher
   if (goalRatio > 0.65 && g >= 3) {
     return 'Forward';
   }
 
-  // 3. HYBRID ROLES (Very common in park football!)
-  
-  // Forward/Midfielder - Attacking player who also creates
+  // 3. HYBRID ROLES (Common in park football)
   if (g >= 4 && a >= 4) {
     return 'Forward/Midfielder';
   }
 
-  // Midfielder/Defender - Box-to-box or defensive midfielder
   if (totalContribution <= 3 && totalContribution > 0 && s > 0) {
     return 'Midfielder/Defender';
   }
 
-  // 4. MIDFIELDER (The most common role in park football)
-  
+  // 4. MIDFIELDER (The balance logic)
+  // Balanced G/A contributor - box-to-box style
+  if (g > 0 && a > 0 && Math.abs(g - a) <= 2) {
+    return 'Midfielder';
+  }
+
   // Classic playmaker - creates more than scores
   if (assistRatio > 0.6 && a >= 3) {
     return 'Midfielder';
   }
   
-  // Balanced contributor - box-to-box style
-  if (g > 0 && a > 0 && Math.abs(g - a) <= 2) {
-    return 'Midfielder';
-  }
-
-  // General midfielder
   if (totalContribution >= 4 && assistRatio >= 0.4) {
     return 'Midfielder';
   }
 
-  // 5. DEFENDER (For park games, defenders occasionally score)
+  // 5. DEFENDER
   if (totalContribution <= 2 && mp >= 3) {
     return 'Defender';
   }
 
-  // 6. UTILITY PLAYER (Jack of all trades)
+  // 6. UTILITY PLAYER
   if (g > 0 && a > 0 && s > 0) {
     return 'Utility Player';
   }
 
-  // Default fallback based on what they do most
+  // Default fallback
   if (g > a && g > s) return 'Forward';
   if (a > g && a > s) return 'Midfielder';
   if (s > 3) return 'Goalkeeper';
   
-  return 'Midfielder'; // Most common in park football
+  return 'Midfielder';
 };
 
 // Calculate confidence score (0-100)
@@ -99,14 +90,12 @@ export const getPositionConfidence = (stats) => {
   if (position === 'Provisional') return 0;
   if (mp < 3) return 30;
   
-  let confidence = 50; // Base confidence
+  let confidence = 50; 
   
-  // Add confidence based on clear patterns
   if (position === 'Goalkeeper' && s > 10) confidence = 95;
   if (position === 'Forward' && g > 8) confidence = 90;
   if (position === 'Midfielder' && Math.abs(g - a) <= 1) confidence = 85;
   
-  // More matches = more confidence
   confidence += Math.min(mp * 5, 30);
   
   return Math.min(confidence, 100);
@@ -142,10 +131,16 @@ export const getPositionBadgeColor = (position) => {
 
 // Enhanced player style detection
 export const getPlayerStyle = (stats) => {
-  const { total_goals: g = 0, total_assists: a = 0, total_saves: s = 0, matches_played: mp = 0 } = stats;
+  const { 
+    total_goals: g = 0, 
+    total_assists: a = 0, 
+    total_saves: s = 0, 
+    clean_sheets: cs = 0, // FIXED: Added this to destructuring to solve the build error
+    matches_played: mp = 0 
+  } = stats;
+
   const position = detectPosition(stats);
   
-  // No data yet
   if (mp < 3) return 'Developing';
   
   const totalContribution = g + a;
@@ -179,18 +174,12 @@ export const getPlayerStyle = (stats) => {
     return '💪 Defensive';
   }
   
-  if (position === 'Utility Player') {
-    return '🌟 Versatile';
-  }
-  
-  if (position === 'Provisional') {
-    return '🆕 New Player';
-  }
+  if (position === 'Utility Player') return '🌟 Versatile';
+  if (position === 'Provisional') return '🆕 New Player';
   
   return '⚽ Player';
 };
 
-// Get position icon name
 export const getPositionIcon = (position) => {
   const icons = {
     'Goalkeeper': 'Shield',
@@ -205,7 +194,6 @@ export const getPositionIcon = (position) => {
   return icons[position] || 'Users';
 };
 
-// Calculate player performance rating
 export const calculatePlayerRating = (stats) => {
   const { 
     total_goals: g = 0, 
@@ -216,10 +204,8 @@ export const calculatePlayerRating = (stats) => {
   } = stats;
 
   const position = detectPosition(stats);
-  
   let rating = 0;
   
-  // Position-specific ratings
   if (position === 'Goalkeeper') {
     rating = (s * 0.5) + (cs * 4);
   } else if (position === 'Forward' || position === 'Forward/Midfielder') {
@@ -232,14 +218,10 @@ export const calculatePlayerRating = (stats) => {
     rating = (g * 2) + (a * 2) + (s * 0.3);
   }
   
-  // Normalize by matches played (but don't over-penalize)
   const normalizedRating = mp > 0 ? (rating / mp) : 0;
-  
-  // Return rating out of 10
   return Math.min(Math.round(normalizedRating * 10) / 10, 10);
 };
 
-// Get a user-friendly explanation
 export const getPositionExplanation = (stats) => {
   const position = detectPosition(stats);
   const { total_goals: g = 0, total_assists: a = 0, total_saves: s = 0, matches_played: mp = 0 } = stats;
