@@ -15,9 +15,6 @@ const UserManagement = ({ token, currentUser }) => {
   const [resetPassword, setResetPassword] = useState('');
   
   const [playerName, setPlayerName] = useState('');
-  const [position, setPosition] = useState('Forward');
-
-  const positions = ['Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -79,6 +76,12 @@ const UserManagement = ({ token, currentUser }) => {
 
   const handleAddPlayer = async (e) => {
     e.preventDefault();
+    
+    if (!playerName.trim()) {
+      alert('Please enter a player name');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -89,22 +92,18 @@ const UserManagement = ({ token, currentUser }) => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          name: playerName,
-          position: position,
-          total_goals: 0,
-          total_saves: 0,
-          total_assists: 0,
-          matches_played: 0
+          name: playerName.trim(),
+          position: 'Forward' // Default position, will be auto-detected based on stats
         })
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        alert('Player added successfully!');
+        alert('Player added successfully! Position will be auto-detected based on match performance.');
         setPlayerName('');
-        setPosition('Forward');
         setShowAddPlayer(false);
       } else {
-        const data = await response.json();
         alert(data.error || 'Failed to add player');
       }
     } catch (error) {
@@ -316,7 +315,7 @@ const UserManagement = ({ token, currentUser }) => {
         </div>
       )}
 
-      {/* Add Player Modal */}
+      {/* Add Player Modal - SIMPLIFIED */}
       {showAddPlayer && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-dark-card rounded-2xl shadow-2xl p-6 w-full max-w-md">
@@ -330,6 +329,12 @@ const UserManagement = ({ token, currentUser }) => {
               </button>
             </div>
 
+            <div className="bg-primary-blue/10 border border-primary-blue/20 rounded-xl p-3 mb-4">
+              <p className="text-primary-blue text-xs">
+                <strong>Note:</strong> Player position will be automatically detected based on their match performance (goals, assists, saves).
+              </p>
+            </div>
+
             <form onSubmit={handleAddPlayer} className="space-y-4">
               <div>
                 <label className="block text-text-secondary text-sm font-medium mb-2">Player Name</label>
@@ -341,18 +346,6 @@ const UserManagement = ({ token, currentUser }) => {
                   className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3 text-white placeholder-text-secondary focus:outline-none focus:border-primary-blue"
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-text-secondary text-sm font-medium mb-2">Position</label>
-                <select
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  className="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-blue"
-                >
-                  {positions.map(pos => (
-                    <option key={pos} value={pos}>{pos}</option>
-                  ))}
-                </select>
               </div>
               <div className="flex gap-2 pt-4">
                 <button
