@@ -171,6 +171,7 @@ const App = () => {
             matches={matches} 
             isAdmin={isAdmin} 
             onDeleteMatch={handleDeleteMatch} 
+            token={token}
           />
         )}
 
