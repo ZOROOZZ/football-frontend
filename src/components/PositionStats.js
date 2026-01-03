@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Target, TrendingUp, ChevronRight, Users } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { detectPosition, getPositionColor, getPositionBadgeColor, getPlayerStyle } from '../utils/playerUtils';
+import { detectPosition, getPositionBadgeColor, getPlayerStyle } from '../utils/playerUtils';
 
 const PositionStats = ({ token, position }) => {
   const [allPlayers, setAllPlayers] = useState([]);
