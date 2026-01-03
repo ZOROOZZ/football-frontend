@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Target, TrendingUp, ChevronRight, Users } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { detectPosition, getPositionColor, getPositionBadgeColor, getPlayerStyle } from '../utils/playerUtils';
 
 const PositionStats = ({ token, position }) => {
-  const [players, setPlayers] = useState([]);
+  const [allPlayers, setAllPlayers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const loadPlayers = useCallback(async () => {
@@ -15,8 +16,14 @@ const PositionStats = ({ token, position }) => {
       
       if (response.ok) {
         const data = await response.json();
-        const filtered = data.filter(p => p.position === position);
-        setPlayers(filtered);
+        // Auto-detect positions and filter
+        const playersWithPositions = data.map(p => ({
+          ...p,
+          autoPosition: detectPosition(p),
+          playerStyle: getPlayerStyle(p)
+        }));
+        const filtered = playersWithPositions.filter(p => p.autoPosition === position);
+        setAllPlayers(filtered);
       }
     } catch (error) {
       console.error('Error loading players:', error);
@@ -66,7 +73,7 @@ const PositionStats = ({ token, position }) => {
           { key: 'matches_played', label: 'Matches', color: 'warning-orange' }
         ],
         chartKey: 'total_assists',
-        chartLabel: 'Assists'
+        chartLabel: 'Assists (Playmaking)'
       },
       'Defender': {
         icon: Shield,
@@ -88,7 +95,7 @@ const PositionStats = ({ token, position }) => {
   const Icon = config.icon;
 
   const getTopPlayers = () => {
-    return [...players]
+    return [...allPlayers]
       .sort((a, b) => (b[config.chartKey] || 0) - (a[config.chartKey] || 0))
       .slice(0, 5);
   };
@@ -101,15 +108,18 @@ const PositionStats = ({ token, position }) => {
     );
   }
 
-  if (players.length === 0) {
+  if (allPlayers.length === 0) {
     return (
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
         <div className="bg-dark-card rounded-2xl p-12 text-center shadow-card">
           <div className="w-16 h-16 bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
             <Icon className="text-text-secondary" size={32} />
           </div>
-          <h3 className="text-white text-xl font-semibold mb-2">No {position}s yet</h3>
-          <p className="text-text-secondary">Players will appear here as they're added to matches</p>
+          <h3 className="text-white text-xl font-semibold mb-2">No {position}s detected</h3>
+          <p className="text-text-secondary">
+            Players are auto-classified based on their stats
+            {position === 'Midfielder' && ' (High assists or balanced goals/assists)'}
+          </p>
         </div>
       </div>
     );
@@ -117,6 +127,16 @@ const PositionStats = ({ token, position }) => {
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto animate-fadeIn space-y-6">
+      {/* Info Banner */}
+      <div className="bg-primary-blue/10 border border-primary-blue/20 rounded-xl p-4">
+        <p className="text-primary-blue text-sm">
+          <strong>Auto-Detection:</strong> Players are classified as {position}s based on their performance stats.
+          {position === 'Midfielder' && ' Midfielders have high assists or balanced goals/assists ratio.'}
+          {position === 'Forward' && ' Forwards score more goals than assists.'}
+          {position === 'Goalkeeper' && ' Goalkeepers have high saves and shots faced.'}
+        </p>
+      </div>
+
       {/* Header Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
@@ -126,7 +146,7 @@ const PositionStats = ({ token, position }) => {
             </div>
           </div>
           <p className="text-text-secondary text-sm mb-1">Total {position}s</p>
-          <p className="text-white text-3xl font-bold">{players.length}</p>
+          <p className="text-white text-3xl font-bold">{allPlayers.length}</p>
         </div>
 
         {config.stats.slice(0, 3).map((stat, idx) => (
@@ -138,7 +158,7 @@ const PositionStats = ({ token, position }) => {
             </div>
             <p className="text-text-secondary text-sm mb-1">{stat.label}</p>
             <p className="text-white text-3xl font-bold">
-              {players.reduce((sum, p) => sum + (p[stat.key] || 0), 0)}
+              {allPlayers.reduce((sum, p) => sum + (p[stat.key] || 0), 0)}
             </p>
           </div>
         ))}
@@ -178,7 +198,7 @@ const PositionStats = ({ token, position }) => {
 
       {/* Players List */}
       <div className="space-y-3">
-        {players.map((player, index) => (
+        {allPlayers.map((player, index) => (
           <div
             key={player.id}
             className="bg-dark-card rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all group cursor-pointer"
@@ -198,16 +218,19 @@ const PositionStats = ({ token, position }) => {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <h3 className="text-white font-bold text-lg truncate">{player.name}</h3>
-                  <span className={`text-xs bg-${config.color}-500/20 text-${config.color}-400 px-2 py-1 rounded-lg font-medium`}>
+                  <span className={`text-xs px-2 py-1 rounded-lg font-medium ${getPositionBadgeColor(position)}`}>
                     {position}
+                  </span>
+                  <span className="text-xs bg-dark-bg px-2 py-1 rounded text-text-secondary">
+                    {player.playerStyle}
                   </span>
                   <ChevronRight className="ml-auto text-text-secondary group-hover:text-white transition-colors flex-shrink-0" size={20} />
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {config.stats.map((stat, idx) => (
                     <div key={idx}>
                       <p className="text-text-secondary text-xs mb-0.5">{stat.label.toUpperCase()}</p>
