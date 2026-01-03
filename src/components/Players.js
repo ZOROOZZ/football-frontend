@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Search, ChevronRight, Target, Users as UsersIcon, TrendingUp, Shield } from 'lucide-react';
-import { detectPosition, getPositionColor, getPositionBadgeColor, getPlayerStyle } from '../utils/playerUtils';
+import { Search, ChevronRight, Target, Users as UsersIcon, TrendingUp, Shield, Zap, Activity, Star, HelpCircle } from 'lucide-react';
+import { detectPosition, getPositionColor, getPositionBadgeColor, getPlayerStyle, getPositionConfidence, calculatePlayerRating, getPositionExplanation } from '../utils/playerUtils';
 
 const Players = ({ players, isAdmin, onDeletePlayer }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPosition, setFilterPosition] = useState('All Players');
-  const [sortBy, setSortBy] = useState('goals');
+  const [sortBy, setSortBy] = useState('rating');
+  const [showDetails, setShowDetails] = useState(null);
 
-  const positions = ['All Players', 'Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
+  const positions = ['All Players', 'Forward', 'Midfielder', 'Defender', 'Goalkeeper', 'Hybrid', 'Provisional'];
 
   const getPlayerStats = (player) => {
     const position = detectPosition(player);
@@ -30,23 +31,41 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
     if (position === 'Goalkeeper') return Shield;
     if (position === 'Forward') return Target;
     if (position === 'Midfielder') return UsersIcon;
-    return Shield;
+    if (position === 'Defender') return Shield;
+    if (position === 'Forward/Midfielder') return Zap;
+    if (position === 'Midfielder/Defender') return Activity;
+    if (position === 'Utility Player') return Star;
+    if (position === 'Provisional') return HelpCircle;
+    return UsersIcon;
   };
 
-  // Add automatic position to each player
+  // Add automatic position and enhanced data
   const playersWithPosition = players.map(p => ({
     ...p,
     autoPosition: detectPosition(p),
-    playerStyle: getPlayerStyle(p)
+    playerStyle: getPlayerStyle(p),
+    confidence: getPositionConfidence(p),
+    rating: calculatePlayerRating(p),
+    explanation: getPositionExplanation(p)
   }));
 
   const filteredPlayers = playersWithPosition
     .filter(player => {
       const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesPosition = filterPosition === 'All Players' || player.autoPosition === filterPosition;
+      
+      let matchesPosition = false;
+      if (filterPosition === 'All Players') {
+        matchesPosition = true;
+      } else if (filterPosition === 'Hybrid') {
+        matchesPosition = player.autoPosition.includes('/') || player.autoPosition === 'Utility Player';
+      } else {
+        matchesPosition = player.autoPosition === filterPosition || player.autoPosition.includes(filterPosition);
+      }
+      
       return matchesSearch && matchesPosition;
     })
     .sort((a, b) => {
+      if (sortBy === 'rating') return b.rating - a.rating;
       if (sortBy === 'goals') return (b.total_goals || 0) - (a.total_goals || 0);
       if (sortBy === 'assists') return (b.total_assists || 0) - (a.total_assists || 0);
       if (sortBy === 'matches') return (b.matches_played || 0) - (a.matches_played || 0);
@@ -58,7 +77,9 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
     Forward: playersWithPosition.filter(p => p.autoPosition === 'Forward').length,
     Midfielder: playersWithPosition.filter(p => p.autoPosition === 'Midfielder').length,
     Defender: playersWithPosition.filter(p => p.autoPosition === 'Defender').length,
-    Goalkeeper: playersWithPosition.filter(p => p.autoPosition === 'Goalkeeper').length
+    Goalkeeper: playersWithPosition.filter(p => p.autoPosition === 'Goalkeeper').length,
+    Hybrid: playersWithPosition.filter(p => p.autoPosition.includes('/') || p.autoPosition === 'Utility Player').length,
+    Provisional: playersWithPosition.filter(p => p.autoPosition === 'Provisional').length
   };
 
   if (players.length === 0) {
@@ -77,12 +98,20 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto animate-fadeIn space-y-6">
+      {/* Info Banner */}
+      <div className="bg-primary-blue/10 border border-primary-blue/20 rounded-xl p-4">
+        <p className="text-primary-blue text-sm">
+          <strong>🎯 Auto-Detection:</strong> Positions are automatically detected based on match performance. 
+          Players need 3+ matches for accurate classification. Hybrid roles (Forward/Midfielder) are common in park football!
+        </p>
+      </div>
+
       {/* Header Section */}
       <div className="bg-dark-card rounded-2xl p-6 shadow-card">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-white text-2xl font-bold">Players</h2>
-            <p className="text-text-secondary text-sm mt-1">Squad Overview</p>
+            <h2 className="text-white text-2xl font-bold">Squad Overview</h2>
+            <p className="text-text-secondary text-sm mt-1">{players.length} registered players</p>
           </div>
           <div className="text-right">
             <p className="text-text-secondary text-sm">Total Players</p>
@@ -91,23 +120,27 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
         </div>
 
         {/* Position Distribution */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 text-center">
-            <p className="text-red-400 text-lg font-bold">{positionStats.Forward}</p>
-            <p className="text-text-secondary text-xs">Forwards</p>
-          </div>
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2 text-center">
-            <p className="text-green-400 text-lg font-bold">{positionStats.Midfielder}</p>
-            <p className="text-text-secondary text-xs">Midfielders</p>
-          </div>
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 text-center">
-            <p className="text-blue-400 text-lg font-bold">{positionStats.Defender}</p>
-            <p className="text-text-secondary text-xs">Defenders</p>
-          </div>
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2 text-center">
-            <p className="text-purple-400 text-lg font-bold">{positionStats.Goalkeeper}</p>
-            <p className="text-text-secondary text-xs">Goalkeepers</p>
-          </div>
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+          {Object.entries(positionStats).map(([pos, count]) => (
+            <div key={pos} className={`rounded-lg p-2 text-center border ${
+              pos === 'Forward' ? 'bg-red-500/10 border-red-500/20' :
+              pos === 'Midfielder' ? 'bg-green-500/10 border-green-500/20' :
+              pos === 'Defender' ? 'bg-blue-500/10 border-blue-500/20' :
+              pos === 'Goalkeeper' ? 'bg-purple-500/10 border-purple-500/20' :
+              pos === 'Hybrid' ? 'bg-orange-500/10 border-orange-500/20' :
+              'bg-gray-500/10 border-gray-500/20'
+            }`}>
+              <p className={`text-lg font-bold ${
+                pos === 'Forward' ? 'text-red-400' :
+                pos === 'Midfielder' ? 'text-green-400' :
+                pos === 'Defender' ? 'text-blue-400' :
+                pos === 'Goalkeeper' ? 'text-purple-400' :
+                pos === 'Hybrid' ? 'text-orange-400' :
+                'text-gray-400'
+              }`}>{count}</p>
+              <p className="text-text-secondary text-xs">{pos}</p>
+            </div>
+          ))}
         </div>
 
         {/* Search Bar */}
@@ -145,10 +178,14 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
       <div className="flex items-center justify-between text-sm">
         <p className="text-text-secondary">{filteredPlayers.length} Players</p>
         <button
-          onClick={() => setSortBy(sortBy === 'goals' ? 'assists' : sortBy === 'assists' ? 'matches' : 'goals')}
+          onClick={() => setSortBy(
+            sortBy === 'rating' ? 'goals' : 
+            sortBy === 'goals' ? 'assists' : 
+            sortBy === 'assists' ? 'matches' : 'rating'
+          )}
           className="text-primary-blue hover:underline flex items-center gap-1"
         >
-          Sort by {sortBy === 'goals' ? 'Goals' : sortBy === 'assists' ? 'Assists' : 'Matches'}
+          Sort by {sortBy === 'rating' ? 'Rating' : sortBy === 'goals' ? 'Goals' : sortBy === 'assists' ? 'Assists' : 'Matches'}
           <TrendingUp size={14} />
         </button>
       </div>
@@ -163,6 +200,7 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
             <div
               key={player.id}
               className="bg-dark-card rounded-2xl p-4 shadow-card hover:shadow-card-hover transition-all group cursor-pointer"
+              onClick={() => setShowDetails(showDetails === player.id ? null : player.id)}
             >
               <div className="flex items-center gap-4">
                 {/* Avatar */}
@@ -183,24 +221,49 @@ const Players = ({ players, isAdmin, onDeletePlayer }) => {
                     <h3 className="text-white font-semibold text-lg truncate">
                       {player.name}
                     </h3>
-                    <span className={`text-xs px-2 py-1 rounded-lg font-medium ${getPositionBadgeColor(player.autoPosition)}`}>
+                    <span className={`text-xs px-2 py-1 rounded-lg font-medium border ${getPositionBadgeColor(player.autoPosition)}`}>
                       {player.autoPosition}
                     </span>
                     <span className="text-xs bg-dark-bg px-2 py-1 rounded text-text-secondary">
                       {player.playerStyle}
                     </span>
+                    
+                    {/* Confidence Badge */}
+                    {player.confidence > 0 && (
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        player.confidence >= 80 ? 'bg-success-green/20 text-success-green' :
+                        player.confidence >= 60 ? 'bg-warning-orange/20 text-warning-orange' :
+                        'bg-error-red/20 text-error-red'
+                      }`}>
+                        {player.confidence}% confidence
+                      </span>
+                    )}
+                    
                     <ChevronRight className="ml-auto text-text-secondary group-hover:text-white transition-colors flex-shrink-0" size={20} />
                   </div>
 
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-4 mt-3">
+                  <div className="grid grid-cols-4 gap-4 mt-3">
                     {stats.map((stat, idx) => (
                       <div key={idx}>
                         <p className="text-text-secondary text-xs mb-0.5">{stat.label}</p>
                         <p className={`${stat.color} text-xl font-bold`}>{stat.value}</p>
                       </div>
                     ))}
+                    <div>
+                      <p className="text-text-secondary text-xs mb-0.5">RATING</p>
+                      <p className="text-warning-orange text-xl font-bold">{player.rating}</p>
+                    </div>
                   </div>
+
+                  {/* Expanded Details */}
+                  {showDetails === player.id && (
+                    <div className="mt-4 pt-4 border-t border-dark-border">
+                      <p className="text-text-secondary text-sm mb-2">
+                        <strong className="text-white">Position Explanation:</strong> {player.explanation}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Delete Button */}
