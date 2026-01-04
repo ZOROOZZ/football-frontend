@@ -1,4 +1,3 @@
-// src/services/api.js
 const API_URL = 'https://football-tracker-api.mehul-112.workers.dev';
 
 export const api = {
@@ -40,6 +39,7 @@ export const api = {
 
   // Create match
   async createMatch(token, matchData) {
+    // console.log('DEBUG: Sending match data:', matchData); // Helpful for debugging
     const response = await fetch(`${API_URL}/api/matches`, {
       method: 'POST',
       headers: {
@@ -49,13 +49,17 @@ export const api = {
       body: JSON.stringify(matchData)
     });
     
+    const data = await response.json();
     if (!response.ok) {
-      const data = await response.json();
+      console.error('Match Creation Error:', data);
       throw new Error(data.error || 'Failed to create match');
     }
     
-    return response.json();
+    return data;
   },
+
+  // NOTE: The endpoints below require backend updates to work!
+  // I have updated the Worker code in the next section to support these.
 
   // Delete match
   async deleteMatch(token, matchId) {
