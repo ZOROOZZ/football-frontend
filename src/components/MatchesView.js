@@ -1,21 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Trophy, ChevronDown, ChevronUp, Target, Award, Shield } from 'lucide-react';
+import { Calendar, Trophy, ChevronDown, ChevronUp, Target, Award, Shield, Trash2 } from 'lucide-react';
 
 const MatchesView = ({ matches, isAdmin, onDeleteMatch, token }) => {
   const [expandedMatch, setExpandedMatch] = useState(null);
   const [matchPlayers, setMatchPlayers] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load player stats for each match
     const loadMatchPlayers = async () => {
-      for (const match of matches) {
-        try {
-          const response = await fetch('https://football-tracker-api.mehul-112.workers.dev/api/players', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (response.ok) {
-            const players = await response.json();
-            // Filter players who played in this match
+      if (matches.length === 0) return;
+      
+      setLoading(true);
+      try {
+        const response = await fetch('https://football-tracker-api.mehul-112.workers.dev/api/players', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const players = await response.json();
+          
+          // Group players by match
+          const playersByMatch = {};
+          
+          for (const match of matches) {
             const matchPlayerData = players.filter(p => 
               p.history && p.history.some(h => h.date === match.match_date)
             ).map(p => {
@@ -25,17 +32,20 @@ const MatchesView = ({ matches, isAdmin, onDeleteMatch, token }) => {
                 matchPerformance: performance
               };
             });
-            setMatchPlayers(prev => ({...prev, [match.id]: matchPlayerData}));
+            
+            playersByMatch[match.id] = matchPlayerData;
           }
-        } catch (error) {
-          console.error('Error loading match players:', error);
+          
+          setMatchPlayers(playersByMatch);
         }
+      } catch (error) {
+        console.error('Error loading match players:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (matches.length > 0 && token) {
-      loadMatchPlayers();
-    }
+    loadMatchPlayers();
   }, [matches, token]);
 
   const toggleMatch = (matchId) => {
@@ -65,6 +75,12 @@ const MatchesView = ({ matches, isAdmin, onDeleteMatch, token }) => {
     if (position === 'Goalkeeper') return Shield;
     if (position === 'Forward') return Target;
     return Award;
+  };
+
+  const handleDelete = async (matchId) => {
+    if (window.confirm('Are you sure you want to delete this match? This will revert all player statistics.')) {
+      await onDeleteMatch(matchId);
+    }
   };
 
   if (matches.length === 0) {
@@ -185,13 +201,13 @@ const MatchesView = ({ matches, isAdmin, onDeleteMatch, token }) => {
                   {/* Players Performance */}
                   <div>
                     <h4 className="text-white font-bold text-lg mb-4">Player Performance</h4>
-                    <div className="space-y-3">
-                      {players.length === 0 ? (
-                        <div className="text-center py-8 text-text-secondary">
-                          No player data available for this match
-                        </div>
-                      ) : (
-                        players.map((player) => {
+                    {players.length === 0 ? (
+                      <div className="text-center py-8 text-text-secondary">
+                        No player data available for this match
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {players.map((player) => {
                           const perf = player.matchPerformance;
                           const PositionIcon = getPositionIcon(player.position);
                           
@@ -258,16 +274,6 @@ const MatchesView = ({ matches, isAdmin, onDeleteMatch, token }) => {
                                         <p className="text-success-green font-bold">{perf.penalties_saved}</p>
                                       </div>
                                     )}
-                                    {(perf?.yellow_cards > 0 || perf?.red_cards > 0) && (
-                                      <div>
-                                        <p className="text-text-secondary text-xs">Cards</p>
-                                        <p className="text-white font-bold">
-                                          {perf?.yellow_cards > 0 && <span className="text-yellow-400">Y:{perf.yellow_cards}</span>}
-                                          {perf?.yellow_cards > 0 && perf?.red_cards > 0 && ' '}
-                                          {perf?.red_cards > 0 && <span className="text-error-red">R:{perf.red_cards}</span>}
-                                        </p>
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
 
@@ -283,18 +289,19 @@ const MatchesView = ({ matches, isAdmin, onDeleteMatch, token }) => {
                               </div>
                             </div>
                           );
-                        })
-                      )}
-                    </div>
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Delete Button for Admin */}
                   {isAdmin && (
                     <div className="flex justify-end pt-4 border-t border-dark-border">
                       <button
-                        onClick={() => onDeleteMatch(match.id)}
-                        className="px-6 py-2.5 bg-error-red/10 text-error-red rounded-xl hover:bg-error-red hover:text-white transition-all font-medium"
+                        onClick={() => handleDelete(match.id)}
+                        className="px-6 py-2.5 bg-error-red/10 text-error-red rounded-xl hover:bg-error-red hover:text-white transition-all font-medium flex items-center gap-2"
                       >
+                        <Trash2 size={18} />
                         Delete Match
                       </button>
                     </div>
@@ -305,6 +312,12 @@ const MatchesView = ({ matches, isAdmin, onDeleteMatch, token }) => {
           );
         })}
       </div>
+
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div>
+        </div>
+      )}
     </div>
   );
 };
