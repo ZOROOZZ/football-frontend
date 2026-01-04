@@ -1,3 +1,4 @@
+// src/services/api.js
 const API_URL = 'https://football-tracker-api.mehul-112.workers.dev';
 
 export const api = {
@@ -23,7 +24,11 @@ export const api = {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
-    if (!response.ok) throw new Error('Failed to fetch matches');
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to fetch matches');
+    }
+    
     return response.json();
   },
 
@@ -33,13 +38,18 @@ export const api = {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
-    if (!response.ok) throw new Error('Failed to fetch players');
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to fetch players');
+    }
+    
     return response.json();
   },
 
   // Create match
   async createMatch(token, matchData) {
-    // console.log('DEBUG: Sending match data:', matchData); // Helpful for debugging
+    console.log('API: Creating match with data:', matchData);
+    
     const response = await fetch(`${API_URL}/api/matches`, {
       method: 'POST',
       headers: {
@@ -49,20 +59,21 @@ export const api = {
       body: JSON.stringify(matchData)
     });
     
-    const data = await response.json();
     if (!response.ok) {
-      console.error('Match Creation Error:', data);
+      const data = await response.json();
+      console.error('API: Match creation failed:', data);
       throw new Error(data.error || 'Failed to create match');
     }
     
-    return data;
+    const result = await response.json();
+    console.log('API: Match created successfully:', result);
+    return result;
   },
-
-  // NOTE: The endpoints below require backend updates to work!
-  // I have updated the Worker code in the next section to support these.
 
   // Delete match
   async deleteMatch(token, matchId) {
+    console.log('API: Deleting match:', matchId);
+    
     const response = await fetch(`${API_URL}/api/matches/${matchId}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
@@ -70,10 +81,13 @@ export const api = {
     
     if (!response.ok) {
       const data = await response.json();
+      console.error('API: Delete match failed:', data);
       throw new Error(data.error || 'Failed to delete match');
     }
     
-    return response.json();
+    const result = await response.json();
+    console.log('API: Match deleted successfully');
+    return result;
   },
 
   // Delete player
