@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Shuffle } from 'lucide-react';
+import { Users, Shuffle, RotateCcw } from 'lucide-react';
 
 const TeamGenerator = ({ token }) => {
   const [players, setPlayers] = useState([]);
@@ -7,6 +7,7 @@ const TeamGenerator = ({ token }) => {
   const [team1, setTeam1] = useState([]);
   const [team2, setTeam2] = useState([]);
   const [filterPosition, setFilterPosition] = useState('All');
+  const [generationCount, setGenerationCount] = useState(0);
 
   const positions = ['All', 'GK', 'DEF', 'MID', 'FWD'];
 
@@ -43,55 +44,68 @@ const TeamGenerator = ({ token }) => {
     return avgGoals * 3 + avgAssists * 2 + avgSaves * 1;
   };
 
+  // Fisher-Yates shuffle algorithm for true randomness
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   const generateBalancedTeams = () => {
     if (selectedPlayers.length < 2) {
       alert('Please select at least 2 players');
       return;
     }
 
-    // Shuffle array for randomness
-    const shuffled = [...selectedPlayers].sort(() => Math.random() - 0.5);
-    
-    // Sort by score after shuffle
-    const sortedPlayers = shuffled.sort((a, b) => 
+    // Sort by score for balancing
+    const sortedPlayers = [...selectedPlayers].sort((a, b) => 
       calculatePlayerScore(b) - calculatePlayerScore(a)
     );
 
-    const totalPlayers = sortedPlayers.length;
-    const team1Size = Math.ceil(totalPlayers / 2);
-    const team2Size = Math.floor(totalPlayers / 2);
+    // Shuffle to add randomness each time
+    const shuffled = shuffleArray(sortedPlayers);
 
     const t1 = [];
     const t2 = [];
     let t1Score = 0;
     let t2Score = 0;
 
-    // Distribute players randomly but balanced
-    sortedPlayers.forEach((player) => {
+    // Snake draft distribution for balance
+    // This creates different teams each time due to shuffle
+    shuffled.forEach((player, index) => {
       const playerScore = calculatePlayerScore(player);
       
-      // Add to team with lower score or randomly if equal
-      if (t1.length < team1Size && (t1Score <= t2Score || t2.length >= team2Size)) {
-        if (t1.length < team1Size) {
-          t1.push(player);
-          t1Score += playerScore;
-        } else {
-          t2.push(player);
-          t2Score += playerScore;
-        }
+      // Alternate assignment with randomness
+      const shouldGoToTeam1 = 
+        (t1.length === t2.length && Math.random() > 0.5) || // Random if equal
+        (t1Score < t2Score) || // Balance by score
+        (t2.length >= Math.ceil(shuffled.length / 2)); // Size limit
+      
+      if (shouldGoToTeam1 && t1.length < Math.ceil(shuffled.length / 2)) {
+        t1.push(player);
+        t1Score += playerScore;
+      } else if (t2.length < Math.floor(shuffled.length / 2)) {
+        t2.push(player);
+        t2Score += playerScore;
       } else {
-        if (t2.length < team2Size) {
-          t2.push(player);
-          t2Score += playerScore;
-        } else {
-          t1.push(player);
-          t1Score += playerScore;
-        }
+        t1.push(player);
+        t1Score += playerScore;
       }
     });
 
-    setTeam1(t1);
-    setTeam2(t2);
+    // Additional shuffle within teams for variety
+    setTeam1(shuffleArray(t1));
+    setTeam2(shuffleArray(t2));
+    setGenerationCount(prev => prev + 1);
+  };
+
+  const resetTeams = () => {
+    setTeam1([]);
+    setTeam2([]);
+    setGenerationCount(0);
   };
 
   const getTeamTotalScore = (team) => {
@@ -113,6 +127,10 @@ const TeamGenerator = ({ token }) => {
     return getPositionShorthand(player.position) === filterPosition;
   });
 
+  const scoreDifference = team1.length > 0 && team2.length > 0 
+    ? Math.abs(parseFloat(getTeamTotalScore(team1)) - parseFloat(getTeamTotalScore(team2))).toFixed(1)
+    : 0;
+
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto animate-fadeIn space-y-6">
       {/* Header */}
@@ -126,15 +144,31 @@ const TeamGenerator = ({ token }) => {
               Team Builder
             </h2>
             <p className="text-text-secondary mt-1">Select players and create balanced teams</p>
+            {generationCount > 0 && (
+              <p className="text-primary-blue text-sm mt-1">
+                ✨ Teams generated {generationCount} time{generationCount > 1 ? 's' : ''}
+              </p>
+            )}
           </div>
-          <button
-            onClick={generateBalancedTeams}
-            disabled={selectedPlayers.length < 2}
-            className="bg-primary-blue hover:bg-primary-blue-dark text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-primary-blue/25"
-          >
-            <Shuffle size={18} />
-            Auto-Balance
-          </button>
+          <div className="flex gap-2">
+            {team1.length > 0 && (
+              <button
+                onClick={resetTeams}
+                className="bg-error-red/10 hover:bg-error-red text-error-red hover:text-white px-4 py-3 rounded-xl font-medium transition-colors flex items-center gap-2"
+              >
+                <RotateCcw size={18} />
+                Reset
+              </button>
+            )}
+            <button
+              onClick={generateBalancedTeams}
+              disabled={selectedPlayers.length < 2}
+              className="bg-primary-blue hover:bg-primary-blue-dark text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-primary-blue/25"
+            >
+              <Shuffle size={18} />
+              {team1.length > 0 ? 'Shuffle Again' : 'Auto-Balance'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -166,6 +200,20 @@ const TeamGenerator = ({ token }) => {
                 style={{ width: `${(parseFloat(getTeamTotalScore(team1)) / (parseFloat(getTeamTotalScore(team1)) + parseFloat(getTeamTotalScore(team2)))) * 100}%` }}
               />
             </div>
+
+            {/* Balance Indicator */}
+            <div className="text-center">
+              <p className={`text-sm font-medium ${
+                scoreDifference < 2 ? 'text-success-green' : 
+                scoreDifference < 5 ? 'text-warning-orange' : 
+                'text-error-red'
+              }`}>
+                {scoreDifference < 2 ? '✓ Perfectly Balanced' : 
+                 scoreDifference < 5 ? '~ Well Balanced' : 
+                 '! Unbalanced'}
+              </p>
+              <p className="text-text-secondary text-xs">Difference: {scoreDifference}</p>
+            </div>
           </div>
 
           {/* Team B */}
@@ -192,6 +240,13 @@ const TeamGenerator = ({ token }) => {
                 className="bg-gradient-to-r from-warning-orange to-orange-400 h-full transition-all duration-500"
                 style={{ width: `${(parseFloat(getTeamTotalScore(team2)) / (parseFloat(getTeamTotalScore(team1)) + parseFloat(getTeamTotalScore(team2)))) * 100}%` }}
               />
+            </div>
+
+            {/* Balance Indicator */}
+            <div className="text-center">
+              <p className="text-text-secondary text-xs">
+                Click "Shuffle Again" for different teams
+              </p>
             </div>
           </div>
         </div>
