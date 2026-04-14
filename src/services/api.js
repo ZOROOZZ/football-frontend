@@ -1,5 +1,5 @@
 // src/services/api.js
-const API_URL = 'https://football-tracker-api.mehul-112.workers.dev';
+const API_URL = 'http://80.225.209.51:8000';
 
 export const api = {
   // Auth
